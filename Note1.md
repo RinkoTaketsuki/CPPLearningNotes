@@ -1,4 +1,4 @@
-# Chapter 1 C++基础
+# Chapter 1 入门
 ## 1. 获得main的返回值的方法
 Unix: 执行完可执行程序后，运行如下指令
 ```
@@ -58,3 +58,16 @@ for (init-statement; condition; expression) {
 3. 执行statement
 4. 执行expression，跳转回步骤2
 ## 8. cin读取不定数量的输入的方法
+```C++
+while (std::cin >> value) {
+    std::cout << value << std::endl;
+}
+```
+当cin读取到EOF或无效输入（如value是int型但读取的字符不是数字）时，cin的值会变为假
+## 9. 命令行输入EOF的方法
+Unix： <kbd>Ctrl</kbd>+<kbd>D</kbd><br>
+Windows： <kbd>Ctrl</kbd>+<kbd>Z</kbd> <kbd>Enter</kbd>
+## 10. 文件重定向的方法
+```
+程序 <输入文件 >输出文件
+```
