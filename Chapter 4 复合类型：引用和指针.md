@@ -11,14 +11,14 @@
 
 ## 2. 指针 *
 
-### 空指针
+1. 空指针
 
- (std::nullptr_t)nullptr  
- #define (long)__null
+	 (std::nullptr_t)nullptr  
+	 #define (long)__null
 
-### void* 指针
+2. void* 指针
 
-只存地址不存类型，无法访问其指向的对象
+	只存地址不存类型，无法访问其指向的对象
 
 ## 3. 一次定义多个变量
 

@@ -104,7 +104,7 @@ while (std::cin >> value) {
 
 ## 9. 命令行输入 EOF 的方法
 
-Unix： <kbd>Ctrl</kbd>+<kbd>D</kbd><br>
+Unix： <kbd>Ctrl</kbd>+<kbd>D</kbd>  
 Windows： <kbd>Ctrl</kbd>+<kbd>Z</kbd> <kbd>Enter</kbd>
 
 ## 10. 文件重定向的方法
@@ -112,3 +112,19 @@ Windows： <kbd>Ctrl</kbd>+<kbd>Z</kbd> <kbd>Enter</kbd>
 ```Shell
 程序 <输入文件 >输出文件
 ```
+
+## 11. 防止文件重复包含的方法
+
+```C++
+#ifndef HFILE_H
+#define HFILE_H
+
+/* 文件内容 */
+
+#endif
+```
+
+```
+#pragma once
+```
+
