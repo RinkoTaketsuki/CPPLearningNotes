@@ -124,7 +124,17 @@ Windows： <kbd>Ctrl</kbd>+<kbd>Z</kbd> <kbd>Enter</kbd>
 #endif
 ```
 
-```
+```C++
 #pragma once
 ```
 
+## 12. using声明
+
+```C++
+using std::cin;
+using namespace std;
+```
+
+> 头文件一般不使用using声明
+
+## 13. 范围for语句
