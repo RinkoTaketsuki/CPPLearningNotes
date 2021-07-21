@@ -1,4 +1,4 @@
-# Chapter 1 入门
+# Chapter 1 入门 & 杂项说明
 
 ## 1. 获得 main 的返回值的方法
 
@@ -68,7 +68,8 @@ cl /EHsc <cpp文件列表>
 ## 6. while 语句执行顺序
 
 ```C++
-while (condition) {
+while (condition) 
+{
     statement;
 }
 ```
@@ -82,7 +83,8 @@ while (condition) {
 循环头定义的变量和循环体中定义的变量作用域相同
 
 ```C++
-for (init-statement; condition; expression) {
+for (init-statement; condition; expression) 
+{
     statement;
 }
 ```
@@ -95,7 +97,8 @@ for (init-statement; condition; expression) {
 ## 8. cin 读取不定数量的输入的方法
 
 ```C++
-while (std::cin >> value) {
+while (std::cin >> value) 
+{
     std::cout << value << std::endl;
 }
 ```
@@ -138,3 +141,14 @@ using namespace std;
 > 头文件一般不使用using声明
 
 ## 13. 范围for语句
+
+```C++
+for (declaration: expression) 
+{
+    statement;
+}
+```
+
+declaration：当前变量，expression：迭代序列  
+相当于Python中的 `for declaration in expression:`  
+如需修改declaration中的值则需声明为引用类型  

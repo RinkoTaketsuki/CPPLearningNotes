@@ -20,7 +20,7 @@ os << s;
 std::istream& getline(is, s); // 从istream中读取一行到string
 bool s.empty(); // s为空返回true，否则返回false
 size_t s.size(); // 返回字符串长度（不包括'/0'）(以字节为单位)
-s[n] // char&
+s[n] // char& （n是size_t类型）
 s1 + s2; // string
 s1 = s2; // string&
 s1 += s2; // string&
