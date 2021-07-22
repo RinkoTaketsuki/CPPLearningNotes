@@ -10,21 +10,23 @@
 
 1. 常量引用可以指向常变量，也可以指向普通变量
 
-	```C++
-	const int ci = 1024; const int &cri = ci; // 正确
-	int j = 512; const int &crj = j; // 正确
-	int &ri = ci; // 错误，非常量引用不可引用常量
-	crj = 1; // 错误，不可通过常量引用修改变量的值
-	j = 1; // 正确
-	```
+    ```C++
+    const int ci = 1024; const int &cri = ci; // 正确
+    int j = 512; const int &crj = j; // 正确
+    int &ri = ci; // 错误，非常量引用不可引用常量
+    crj = 1; // 错误，不可通过常量引用修改变量的值
+    j = 1; // 正确
+    ```
 
 2. 常量引用可以引用字面值，表达式和类型不同的变量
 
-	```C++
-	int i = 42; double d = 3.14;
-	const int &r1 = 2 * i; // 等价于：const int temp = i; const int &r1 = temp;
-	const int &r2 = d; // 等价于：const int temp = d; const int &r2 = temp;
-	```
+    ```C++
+    int i = 42; double d = 3.14;
+    const int &r1 = 2 * i; // 等价于：const int temp = i; const int &r1 = temp;
+    const int &r2 = d; // 等价于：const int temp = d; const int &r2 = temp;
+    ```
+
+3. 常量引用可以避免对被引用变量的拷贝和改变，只做读取
 
 ## 3. 指向const的指针（底层const）
 
@@ -69,21 +71,21 @@ cp = cpc; // 正确，cp本身的值可以改变，且二者都是指向const in
 
 1. 使用constexpr声明的常变量必须用常量表达式初始化
 
-	```C++
-	constexpr int pi = 3;
-	constexpr int pim2 = pi * 2;
-	
-	int i = 2;
-	const int ci = i; // 正确
-	constexpr int cei = i; // 错误
-	constexpr int cej = ci + 1; // 正确
-	```
+    ```C++
+    constexpr int pi = 3;
+    constexpr int pim2 = pi * 2;
+    
+    int i = 2;
+    const int ci = i; // 正确
+    constexpr int cei = i; // 错误
+    constexpr int cej = ci + 1; // 正确
+    ```
 
 2. constexpr指针必须指向地址固定的对象（如全局变量）或为0，且总是顶层const，指针指向的对象可变，可以指向常变量也可以指向普通变量
 
-	```C++
-	int i = 0;
-	constexpr int ci = 42;
-	constexpr const int *p = &i;
-	constexpr int *q = &i;
-	```
+    ```C++
+    int i = 0;
+    constexpr int ci = 42;
+    constexpr const int *p = &i;
+    constexpr int *q = &i;
+    ```

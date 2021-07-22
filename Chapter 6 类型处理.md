@@ -13,23 +13,23 @@ using rint = int&;
 
 2. 使用auto定义多个变量时其基础类型必须一样
 
-	```C++
-	auto i = 0, *p = &i; // 正确
-	auto j = 0, d = 3.14; // 错误
-	```
+    ```C++
+    auto i = 0, *p = &i; // 正确
+    auto j = 0, d = 3.14; // 错误
+    ```
 
 3. auto会忽略引用和顶层const，除非明确指出；顶层const指针会转化成底层const指针
 
-	```C++
-	int i = 0, &r = i; const int ci = 42; int const* p = &i;
-	auto b = ci; // int
-	auto c = r; // int
-	auto d = &i; // int *
-	auto e = &ci; // const int *
-	auto f = p; // const int *（注意）
-	const auto g = ci; // const int
-	const auto &h = ci; // const int &
-	```
+    ```C++
+    int i = 0, &r = i; const int ci = 42; int const* p = &i;
+    auto b = ci; // int
+    auto c = r; // int
+    auto d = &i; // int *
+    auto e = &ci; // const int *
+    auto f = p; // const int *（注意）
+    const auto g = ci; // const int
+    const auto &h = ci; // const int &
+    ```
 
 ## 3. decltype类型指示符
 
