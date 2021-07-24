@@ -69,3 +69,32 @@ argv是char*的数组，存储命令中的字符串
 则此时argc为5，argv[0]为"./a.out"，argv[1]为"-o"，argv[5]为0
 
 ## 5. 可变形参
+
+### initializer_list形参
+
+实参类型一致但数量不定时使用
+
+```C++
+// initializer_list的方法
+initializer_list<T> lst; // 默认初始化
+initializer_list<T> lst{a, b, c, ...}; // 大括号初始化
+lst2(lst); lst2 = lst; // 拷贝
+constexpr size_t lst.size() const; // 返回元素数量
+constexpr const T* lst.begin() const; // 返回首指针 
+constexpr const T* lst.end() const; // 返回尾指针的下一位置
+// lst中所有元素均为常量类型不可修改
+```
+
+```C++
+// 传参方法举例
+void err_msg(int errCode, initializer_list<string> il); // 声明
+err_msg(-1, {"function", "OK"}); // 调用
+```
+
+### 省略符形参
+
+1. C和C++通用  
+2. 省略符不能传递类类型，容易出错  
+3. 需使用C标准库varargs
+4. 只能放在形参列表末尾
+5. 不检查类型
