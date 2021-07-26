@@ -116,3 +116,26 @@ using namespace std;
 ```
 
 > 头文件一般不使用using声明
+
+## 11. assert宏和NDEBUG
+
+`assert(expr)` 这个宏当expr为0时，输出expr名字并终止程序执行，需包含cassert  
+assert宏的生效条件是NDEBUG宏未定义，若在文件开头添加 `#define NDEBUG` 则assert语句将被预处理器无视  
+也可以使用编译器选项 `-D NDEBUG` 添加宏（MSVC使用 `\D`）  
+可以用NDEBUG编写自己定义的调试代码
+
+```C++
+#ifndef NDEBUG
+/* 调试代码 */
+#endif
+```
+
+## 12. 编译器定义的变量
+
+```C++
+__func__; // const char数组，局部静态变量，存储函数名
+__FILE__; // 字符串宏，存储当前文件名（绝对路径名）
+__LINE__; // 字符串宏，存储当前行号
+__TIME__; // 字符串宏，存储文件编译时间（不包含日期）
+__DATE__; // 字符串宏，存储文件编译日期
+```
