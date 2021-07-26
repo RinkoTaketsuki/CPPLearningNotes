@@ -35,7 +35,31 @@ string &shorterString(string &s1, string &s2)
 ### 实参类型转换等级
 
 1. 精确匹配：完全相同、数组或函数类型转化成对应指针、添加或删除实参的顶层const
-2. 通过const转换实现的匹配：
+2. 通过const转换实现的匹配：添加底层const的转换
+3. 通过类型提升实现的匹配
+4. 通过算术类型转换或指针转换（隐式转成void*或父类指针）实现的匹配
+5. 通过类类型转换实现的匹配
+
+```C++
+void f(short);
+void f(int);
+void g(long);
+void g(float);
+// h函数的形参换成指针类型效果类似
+void h(int&);
+void h(const int&);
+
+int main()
+{
+    f('a'); // 调用short属于4，调用int属于3
+    g(3.14); // 调用long或float均属于4，具有二义性
+    const int a = 0;
+    int b = 0;
+    h(a); // 只能调用const int，否则底层const被删除
+    h(b); // 调用int，非底层const优先（精确匹配）
+    return 0;
+}
+```
 
 ## 3. 重载与作用域问题
 

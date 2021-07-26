@@ -56,3 +56,44 @@
 3. 如果输入值并非是constexpr，则返回的值也不是constexpr
 4. 可多次定义但每个定义必须完全一致
 5. 尽量在头文件中定义
+
+## 7. 函数指针
+
+> 函数类型 = 返回类型 + 形参类型
+
+```C++
+ret_t (*pf)(para_t1, para_t2, ...);
+// 包住变量名的括号不可省，否则便是返回类型为ret_t*类型的函数
+```
+
+把函数名作为右值使用时，其会自动转化为函数指针，加不加取地址符均可  
+函数指针可直接用于调用函数，加不加解引用符均可
+
+```C++
+int f(int);
+int (*pf)(int);
+int v;
+// 等价的赋值语句
+pf = f; pf = &f;
+// 等价的赋值语句
+v = f(0); v = pf(0); v = (*pf)(0);
+// 等价的函数声明
+void foo(int pf(int)); void foo(int (*pf)(int));
+void foo(decltype(f)); void foo(decltype(f)*);
+// 注意decltype(函数)返回的是函数类型而非函数指针类型
+```
+
+有重载函数时，由于函数指针带有形参列表，故可以区分  
+需要注意的是，返回函数指针必须显式声明为指针，不能返回函数类型
+
+```C++
+using fun_t = bool(double);
+using pfun_t = bool(*)(double);
+fun_t foo(int); // 错误
+pfun_t foo(int); // 正确
+fun_t *foo(int); // 正确
+bool (*foo(int))(double); // 正确，直接写法
+auto foo(int) -> bool(*)(double); // 正确，尾置返回类型
+```
+
+auto初始化作类型判断时，由于函数作为右值使用会转换为函数指针，故会判断为函数指针
