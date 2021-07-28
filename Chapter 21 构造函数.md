@@ -111,4 +111,25 @@ int main()
 }
 ```
 
-可在只有一个实参的构造函数前面添加 __explicit__ 关键字表示其不能作为转换构造函数
+可在只有一个实参的构造函数前面添加 __explicit__ 关键字表示其不能作为转换构造函数，但可以用来强转  
+__explicit__ 修饰的构造函数只能用于直接初始化
+
+```C++
+class A
+{
+public:
+    A() = default;
+    explicit A(int n): mem(n) {}
+    void memFun(const A&);
+    int mem = 0;
+};
+
+int var = 0;
+A a = var; // 错误，提示不存在从int转换到A的适当构造函数
+A a(var); // 正确
+a.memFun(var) // 错误
+a.memFun(A(var)) // 正确
+a.memFun(static_cast<A>(var)) // 正确
+```
+
+vector的容量初始化函数是 __explicit__ 的
