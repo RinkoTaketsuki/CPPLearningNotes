@@ -110,6 +110,7 @@ fstream f; // 未绑定的默认文件流
 fstream f(s, mode); 
 /* 按 mode 打开文件 s（string 或 C 字符串），mode 的类型是
  * std::ios::openmode，有默认值，默认打开模式与 f 类型相关
+ * 该构造函数是 explicit 的
  */
 f.open(s, mode); // 按 mode 打开名为 s 的文件，无返回值
 f.close(); // 关闭文件，无返回值
@@ -137,3 +138,103 @@ for (size_t i = 0; i < 10; ++i)
     }
     // 每步循环都会销毁 f，无须显式调用 close 函数
 }
+```
+
+## 6. 文件模式
+
+`in` 读  
+`out` 写  
+`app` 每次写前定位到文件末尾
+`ate` 打开文件后定位到文件末尾
+`trunc` 截断文件
+`binary` 二进制 IO
+
+- 只能对 `ofstream` 和 `fstream` 设置 `in`  
+- 只能对 `ofstream` 和 `fstream` 设置 `out`  
+- 只能对 `out` 模式的流设置 `trunc`  
+- 只能对非 `trunc` 模式的流设置 `app`  
+- 若设置了 `app`，则 `out` 也隐式地被设置  
+- 若只设置 `out`，则 `trunc` 也隐式地被设置，若需阻止文件被截断，则需额外添加 `app` 或 `in` 模式  
+- `ate` 和 `binary` 可应用于所有文件流  
+
+类型|默认打开模式
+:-:|:-:
+`ifstream`|`in`
+`ofstream`|`out`
+`fstream`|`in\|out`
+
+每次将文件流对象绑定到新文件时都可以重新指定模式  
+
+## 7. string 流
+
+### string 流的特有操作
+
+```C++
+stringstream stream; // 未绑定的默认文件流
+stringstream stream(s); 
+/* 将 string 类型的 s 的拷贝到 stream 中
+ * 该构造函数是 explicit 的
+ */
+stream.str() // 返回 stream 中保存的字符串拷贝
+stream.str(s) // 无返回值，将 string 类型的 s 拷贝到 stream 中
+```
+
+### istringstream 使用示例
+
+```C++
+struct PersonInfo
+{
+    string name;
+    vector<string> phones;
+};
+string line, phone;
+vector<PersonInfo> people;
+
+/* 从标准输入读取如下格式的数据到 people 中：
+ * 每行为：名字 电话号码1 电话号码2 ...
+ * 不限行数
+ */
+while (getline(cin, line))
+{
+    PersonInfo info;
+    istringstream record(line);
+    record >> info.name;
+    while (record >> phone)
+        info.phones.push_back(phone);
+    people.push_back(info);
+}
+```
+
+### ostringstream 使用示例
+
+```C++
+/* 检查上个示例中的号码，将其进行格式转换
+ * 若某人的某个号码无法转换，则输出错误信息
+ * invalid: 检查是否不合法
+ * format: 转换函数
+ */
+ for (const auto &entry : people)
+ {
+    ostringstream formatted, badNums;
+    for (const auto &nums : entry.phones)
+    {
+        if (invalid(nums))
+        {
+           badNums << " " << nums;
+        }
+        else
+        {
+           formatted << " " << format(nums);
+        }
+    }
+    if (badNums.str().empty())
+    {
+        cout << entry.name << formatted.str() << endl;
+    }
+    else
+    {
+        cerr << "Input error: " << entry.name << "\nInvalid number(s):"
+            << badNums.str() << '\n';
+    }
+ }
+ ```
