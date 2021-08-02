@@ -380,5 +380,37 @@ s.insert(pos, args);
  * 若 pos 是迭代器，则返回指向第一个插入字符的迭代器
  */
 s.erase(pos, len);
-/* 
+/* 删除从 pos 开始 len 个字符，如果未提供 len，则删除 pos 开始到最后的
+ * 所有字符，返回 s 的引用
+ */
+s.assign(args);
+/* 将字符串替换为 args 指定的字符，返回 s 的引用 */
+s.append(args);
+/* 将 args 追加到 s 后面，返回 s 的引用 */
+s.replace(range, args);
+/* 删除 range 范围内的字符，替换为 args 指定的字符，返回 s 的引用 */
 ```
+
+`args` 可使用的形式：  
+
+- `str`： 字符串，不能与 `s` 相同
+- `str, pos, len`： `str` 从 `pos` 开始最多 `len` 个字符
+- `cp`： 指向以空字符结尾的字符数组
+- `cp, len`： 指向的字符数组的前最多 `len` 个字符
+- `n, c`： `n` 个字符 `c`
+- `b, e`： 迭代器范围，不能是指向 `s` 的迭代器
+- 花括号字符列表
+
+`args` 形式|`replace(pos, len, args)`|`replace(b, e, args)`|`insert(pos, args)`|`insert(iter, args)`
+:-:|:-:|:-:|:-:|:-:
+`str`|o|o|o|x
+`str, pos, len`|o|x|o|x
+`cp, len`|o|o|o|x
+`cp`|o|o|x|x
+`n, c`|o|o|o|o
+`b, e`|x|o|x|o
+花括号字符列表|x|o|x|o
+
+`append` 和 `assign` 可以使用所有 `args` 形式
+
+### string 搜索操作
