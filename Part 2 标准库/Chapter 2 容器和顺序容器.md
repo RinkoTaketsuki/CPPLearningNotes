@@ -414,3 +414,135 @@ s.replace(range, args);
 `append` 和 `assign` 可以使用所有 `args` 形式
 
 ### string 搜索操作
+
+```C++
+// 以下搜索操作返回 size_type 类型的下标，或 npos
+
+s.find(args); // 查找 args 第一次出现的位置
+s.rfind(args); // 查找 args 最后一次出现的位置
+s.find_first_of(args); // 查找 args 中的任意一个字符第一次出现的位置
+s.find_last_of(args); // 查找 args 中的任意一个字符最后一次出现的位置
+s.find_first_not_of(args); // 查找非 args 中的字符第一次出现的位置
+s.find_last_not_of(args); // 查找非 args 中的字符最后一次出现的位置
+```
+
+`args` 可使用的形式：  
+
+- `c, pos`：从 `s` 的 `pos` 位置开始查找字符 `c`，`pos` 默认为 0
+- `s2, pos`：从 `s` 的 `pos` 位置开始查找字符串 `s2`，`pos` 默认为 0
+- `cp, pos`：从 `s` 的 `pos` 位置开始查找 `cp` 指向的 C 字符串，`pos` 默认为 0
+- `cp, pos, n`：从 `s` 的 `pos` 位置开始查找 `cp` 指向的字符数组的前 `n` 个字符，`pos` 和 `n` 无默认值
+
+```C++
+// 搜索所有数字的出现位置
+
+string nums("0123456789")
+string::size_type pos = 0;
+string s;
+std::cin >> s;
+while ((pos = s.find_first_of(nums, pos) != string::npos))
+{
+    /* 处理 s.at(pos) */
+    ++pos;
+}
+```
+
+### compare
+
+与 `cstring` 中的 `strcmp` 类似，返回正数（大于），负数（小于），或 0（等于）  
+
+参数可使用的形式：
+
+- `s2`：比较 `s` 和 `s2`
+- `pos1, n1, s2`：将 `s` 的从 `pos1` 开始的 `n1` 个字符与 `s2` 比较
+- `pos1, n1, s2, pos2, n2`：将 `s` 的从 `pos1` 开始的 `n1` 个字符与 `s2` 从 `pos2` 开始的 `n2` 个字符比较
+- `cp`：比较 `s` 和 `cp` 指向的 C 字符串
+- `pos1, n1, cp`：将 `s` 的从 `pos1` 开始的 `n1` 个字符与 `cp` 指向的 C 字符串比较
+- `pos1, n1, cp, n2`：将 `s` 的从 `pos1` 开始的 `n1` 个字符与 `cp` 指向的字符数组的前 `n2` 个字符比较
+
+### string 与数值间的转换
+
+若无法转换为数值，则抛出 `invalid_argument` 异常，若转换出的数值无法用任何一种类型来表示，则抛出 `out_of_range` 异常  
+
+```C++
+to_string(val); // val 可以是任意算术类型，小整型会被提升
+stoi(s, p, b); 
+/* 返回 s 的起始字串（表示数值内容）的数值，返回类型是 int
+ * p 是 size_t 指针，用来存储第一个非数值字符的下标
+ * b 是 int，表示转换所用的基数，默认为 10
+ */
+stol(s, p, b); // long
+stoul(s, p, b); // unsigned long
+stoll(s, p, b); // long long
+stoull(s, p, b); // unsigned long long
+stof(s, p, b); // float
+stod(s, p, b); // double
+stold(s, p, b); // long double
+```
+
+## 15. 顺序容器适配器
+
+> 适配器：使容器、迭代器和函数的行为看起来像另一种事物  
+> 容器适配器：使容器的行为看似不同的类型  
+> 顺序容器适配器：`stack`、`queue` 和 `priority_queue`  
+
+### 容器适配器的类型成员
+
+`size_type`：大小类型  
+`value_type`：元素类型  
+`container_type`：适配器的底层容器类型  
+
+### 容器适配器的操作
+
+```C++
+A a; // 创建空适配器
+A a(c); // 创建带有容器 c 的拷贝的适配器
+
+// 可使用关系运算符比较适配器，返回底层容器的比较结果
+
+a.empty();
+a.size();
+a.swap(b); // 须注意交换时不光 a 和 b 的类型要完全相同，底层容器类型也要完全相同
+swap(a, b);
+```
+
+适配器使用的容器必须支持添加、删除和访问尾元素的操作，`array` 和 `forword_list` 不可用  
+可使用顺序容器类型作为第二个类型参数来重载适配器的默认实现类型，如
+
+```C++
+vector<int> vec;
+stack<int, vector<int>> stk(vec);
+```
+
+只能使用适配器规定的操作，不能使用底层容器的操作  
+
+### 栈适配器
+
+```C++
+// 要求容器支持 push_back, pop_back 和 back 操作
+// 默认基于 deque 实现，可以基于 vector, string 和 list 实现
+s.pop(); // 删除栈顶元素，不返回值
+s.push(item); // 将 item 压入栈顶，该元素是 item 的移动或拷贝，无返回值
+s.emplace(args); // 在栈顶依据 args 创建新元素，无返回值
+s.top(); // 返回栈顶元素的引用，不删除值
+```
+
+### 队列适配器
+
+```C++
+// queue 要求容器支持 back, push_back, front 和 push_front
+// priority_queue 要求容器支持 front, push_back, pop_back 和随机访问
+// queue 默认基于 deque 实现，可以基于 vector, string 和 list 实现
+// priority_queue 默认基于 vector 实现，可以基于 string 和 deque 实现
+q.pop(); // 删除队首元素，无返回值
+q.front(); // 返回队首元素的引用，不删除值，只适用于 queue
+q.back(); // 返回队尾元素的引用，不删除值，只适用于 queue
+q.top(); // 返回最高优先级元素的引用，不删除值，只适用于 priority_queue
+q.push(item); 
+/* 在 queue 队尾或 priority_queue 的合适位置插入 item，
+ * 该元素是 item 的移动或拷贝，无返回值
+ */
+q.emplace(args); // 同上，但根据 args 创建新元素
+```
+
+`priority_queue` 默认根据 `<` 运算符来确定优先级，大元素优先级高  
