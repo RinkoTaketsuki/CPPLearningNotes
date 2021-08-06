@@ -366,6 +366,12 @@ s.substr(pos, n);
 /* 返回一个包含 s 从 pos 开始 n 个字符的拷贝，pos 默认为 0，
  * n 默认值为 size - pos，若 pos 大于 size，则抛 out_of_range 异常
  */
+
+istream& getline(is, s);
+/* 从istream中读取一行到string
+ * 从当前位置开始读，若当前字符为换行符则停止，换行符也会被包括进来  
+ * 但写入string时换行符会被丢弃
+ */
 ```
 
 ### 修改 string 的操作
@@ -475,6 +481,29 @@ stof(s, p, b); // float
 stod(s, p, b); // double
 stold(s, p, b); // long double
 ```
+
+### string和 C 字符串 相加的注意事项
+
++号的两边至少要有一个是string类型，这样其中的字符串字面值会自动转化为string类型
+
+### cctype中的字符处理函数
+
+| 函数原型 | 说明 |
+|:-:|:-:|
+|int isalnum(int)|是否是字母或数字|
+|int isalpha(int)|是否是字母|
+|int iscntrl(int)|是否是控制字符（\0~\37，\127删除符，不包括空格）|
+|int isdigit(int)|是否是数字|
+|int isgraph(int)|是否是有图形的字符（字母数字 + 标点符号）|
+|int islower(int)|是否是小写字母|
+|int isprint(int)|是否是可打印字符（字母数字 + 标点符号 + 空格）|
+|int ispunct(int)|是否是标点符号|
+|int isspace(int)|是否是空白字符（空格，\t，\v，\r，\n，\f）|
+|int isxdigit(int)|是否是16进制数字（数字 + A~F + a~f）|
+|int tolower(int)|若是大写字母则返回小写，否则返回原字符|
+|int toupper(int)|若是小写字母则返回大写，否则返回原字符|
+
+> 标点符号包括 ! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~
 
 ## 15. 顺序容器适配器
 
