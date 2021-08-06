@@ -220,3 +220,186 @@ cout << endl;
 // 递减排序，把较小元素放在末尾，较大元素放在开头
 sort(vec.rbegin(), vec.rend());
 ```
+
+```C++
+// 处理逗号分隔的单词列表
+string line("first,middle,last");
+auto firstCommaPos = find(line.cbegin()/* 1 */, line.cend()/* 6 */, ','); /* 2 */
+string firstWord(line.cbegin(), firstCommaPos); // "first"
+auto lastCommaPos = find(line.crbegin()/* 5 */, line.crend()/* 0 */, ','); /* 3 */
+string reversedLastWord(line.crbegin(), lastCommaPos); // "tsal"
+string LastWord(lastCommaPos.base()/* 4 */, line.cend()); // "last"
+//   f i r s t , m i d d l e , l a s t
+// 0 1         2             3 4     5 6
+```
+
+`base` 相比原位置向后移位一个位置，这使得 `rIter1.base(), rIter2.base()` 和 `rIter1, rIter2` 表示的范围相同，方向相反  
+将一个普通迭代器赋给反向迭代器或用于初始化反向迭代器也是同样的效果，二者指向的位置不同  
+
+## 9. 泛型算法要求的迭代器类别
+
+提供给泛型算法的迭代器类型要比要求的迭代器类型的层次更高，否则会出错  
+
+### 输入迭代器
+
+只读不写，单遍扫描，只能递增  
+
+支持的操作：  
+
+- `==` 和 `!=`  
+- `++`
+- 解引用和访问成员（`*`，`.` 和 `->`）
+
+`*iter++` 操作会导致其他指向流的迭代器失效，故只能单遍扫描  
+`find` 和 `accumulate` 要求输入迭代器  
+`istream_iterator` 属于输入迭代器  
+
+### 输出迭代器
+
+只写不读，单遍扫描，只能递增  
+
+支持的操作：
+
+- `++`
+- 解引用操作，`*iter` 只出现在赋值运算符的左侧，用于写入元素  
+
+`*iter++` 操作会导致其他指向流的迭代器失效，故只能单遍扫描  
+`copy` 的第三个参数要求输出迭代器  
+`ostream_iterator` 属于输出迭代器  
+
+### 前向迭代器
+
+支持多次读写，只能递增  
+
+`replace` 要求前向迭代器  
+单向链表中的迭代器是前向迭代器  
+
+### 双向迭代器
+
+支持多次读写，可递增可递减  
+
+除单向链表外其他容器均提供双向迭代器  
+
+### 随机访问迭代器
+
+可随机访问任意元素，在双向迭代器的基础上还具有如下功能：  
+
+- 大小比较运算符  
+- 加减（包括组合赋值）一个整数值  
+- 两个迭代器相减  
+- 下标运算符，`iter[n]` 和 `*(iter[n])` 等价  
+
+`sort` 要求随机访问迭代器  
+`vector`，`string`，`deque`，`array` 提供的都是随机访问迭代器  
+访问内置数组的指针也是随机访问迭代器  
+
+## 10. 泛型算法的形参模式  
+
+```C++
+alg(beg, end, others);
+alg(beg, end, dest, others);
+alg(beg, end, beg2, others);
+alg(beg, end, beg2, end2, others);
+```
+
+### 接受单个 dest 的算法
+
+算法假定向 dest 不管写入多少数据都是安全的  
+通常使用插入迭代器或 `ostream_iterator`  
+
+### 接受第二个序列的算法
+
+只接受 `beg2` 的算法假定 `[beg1, end1)` 和从 `beg2` 开始的范围一样大  
+
+## 11. 泛型算法命名规范  
+
+### 使用重载形式传递谓词
+
+接受谓词版本的函数使用谓词来代替默认的 `<` 或 `==` 运算符  
+
+```C++
+unique(beg, end);
+unique(beg, end, comp);
+```
+
+### 附加 _if 后缀
+
+该版本使用谓词而不是元素值进行比较  
+从判定二者相等改为以传递的谓词返回非零值为准  
+
+```C++
+find(beg, end, val);
+find_if(beg, end, pred);
+```
+
+### 附加 _copy 后缀
+
+重排元素的算法默认将重排后的结果写回输入序列  
+附加后缀的版本指定输出位置  
+
+```C++
+reverse(beg, end);
+reverse_copy(beg, end, dest);
+```
+
+以上几种命名方式可以混用  
+
+```C++
+remove(beg, end, val);
+remove_if(beg, end, pred);
+remove_copy(beg, end, dest, val);
+remove_copy_if(beg, end, dest, pred);
+```
+
+## 12. 链表和单向链表的特定容器算法  
+
+由于链表和单向链表不提供随机访问迭代器，故一些泛型算法以成员函数的形式在这两类容器中实现  
+也可以用通用版本的泛型算法，但性能不如成员函数版本的算法  
+
+```C++
+// 这些算法均返回 void
+
+lst.merge(lst2);
+lst.merge(lst2, comp);
+/* lst 和 lst2 都必须是有序的，将 lst2 中的元素按照由小到大顺序放在 lst 的合适位置
+ * 合并之后 lst2 会变为空，第二个版本用给定的谓词代替 < 运算符
+ */
+
+lst.remove(val);
+lst.remove_if(pred);
+/* 调用 erase 删除等于 val 或使得 pred 为真的每个元素
+ */
+
+lst.reverse();
+/* 反转元素
+ */
+
+lst.sort();
+lst.sort(comp);
+/* 使用 < 运算符或 comp 排序元素
+ */
+
+lst.unique();
+lst.unique(pred);
+/* 调用 erase 删除重复值，使用 == 或二元谓词 pred 判定
+ */
+
+lst.splice(p, lst2);
+flst.splice_after(p, lst2);
+/* p 指向 lst 或 flst，将 lst2 中的元素全部移动到 lst 的 p 前面或 flst 的 p 后面
+ * lst2 中的元素会全部被删除，lst2 的类型必须和 lst 或 flst 相同，且不能是同一个链表
+ */
+
+lst.splice(p, lst2, p2);
+flst.splice_after(p, lst2, p2);
+/* 与上面不同的是，p2 指向 lst2，只移动 p2 指向的元素或 p2 后面的一个元素
+ * lst2 可以和 lst 相同
+ */
+
+lst.splice(p, lst2, b, e);
+flst.splice_after(p, lst2, b, e);
+/* 与上面不同的是，[b, e) 必须是 lst2 的合法范围，p 不能指向 [b, e) 中的元素
+ */
+```
+
+链表特有的操作会改变容器，是真正的删除元素，而不是像泛型算法一样使用替换重排的方法
