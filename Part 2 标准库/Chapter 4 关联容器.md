@@ -116,3 +116,50 @@ c.equal_range(k); // 返回关键字等于 k 的元素的迭代器 pair
 若 k 在 c 中不存在且大于所有关键字，则 `lower_bound` 返回尾后迭代器  
 `equal_range` 等价于 `[lower_bound, upper_bound)`  
 若 k 在 c 中不存在，则 `equal_range` 返回的两个迭代器均为 k 可插入的位置  
+
+## 8. 无序关联容器
+
+组织元素时默认方法不是使用 `<` 运算符，而是使用 `==` 运算符和 `hash` 函数
+
+```C++
+c.bucket_count(); // 正在使用的桶的数量（size_type）
+c.max_bucket_count(); // 容器最大容纳的桶数量（size_type）
+c.bucket_size(n); // 编号为 n（size_type） 的桶中的元素数量（size_type）
+c.bucket(k); // 包含关键字 k（key_type） 的桶编号（size_type）
+c.begin(n); c.end(n); // 返回编号为 n 的桶的迭代器（local_iterator）
+c.cbegin(n); c.cend(n); // 返回编号为 n 的桶的迭代器（const_local_iterator）
+c.load_factor(); // 返回每个桶的平均元素数量（float）
+c.max_load_factor(); // 返回试图维护的平均桶大小（float）
+// c 会添加桶使得 load_factor <= max_load_factor
+c.rehash(n); // 重组存储，使得 bucket_count >= n，且 bucket_count > size/max_load_factor
+c.reserve(n); // 重组存储，使得 c 可以保存 n 个元素且不进行 rehash
+```
+
+内置类型和一些标准库类型（`string`，智能指针）等具有 `hash` 模板，不具有 `hash` 模板的需提供 `hash` 函数  
+
+```C++
+class A
+{
+private:
+    string s = "";
+public:
+    A() = default;
+    string& get() {return s;}
+};
+
+size_t hasher(const A &obj)
+{
+    // hash<string> 是可调用对象
+    return hash<string>()(obj.get());
+}
+
+bool eqOp(const A &obj1, const A &obj2)
+{
+    return obj1.get() == obj2.get();
+}
+
+// 三个模板参数是：元素类型，hash 函数指针类型，比较函数指针类型
+// 三个初始化参数是：桶数量，hash 函数指针，比较函数指针
+unordered_multiset<A, decltype(hasher)*, decltype(eqOp)*>
+umset_A(100, hasher, eqOp);
+```
