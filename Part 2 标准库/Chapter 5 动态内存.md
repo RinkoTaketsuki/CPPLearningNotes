@@ -136,7 +136,66 @@ shared_ptr<A> sp(new A(), deleter);
 `unique_ptr` 不支持拷贝或赋值  
 
 ```C++
-unique_ptr<T> u1; // 空指针，使用 delete 删除器
-unique_ptr<T, D> u2; // 空指针，使用类型为 D 的删除器
-unique_ptr<T, D> u3(d); //
+unique_ptr<T> u; // 空指针，使用 delete 删除器
+unique_ptr<T> u(q); // 使用内置指针 q 初始化
+unique_ptr<T, D> u; // 空指针，使用类型为 D 的删除器
+unique_ptr<T, D> u(d); // 空指针，使用删除器 d 替代 delete
+u = nullptr; // 释放指向对象并将 u 置为空
+u.release(); // u 放弃管理并返回内部的指针，将 u 置为空
+u.reset(); // 释放指向对象
+u.reset(q); // 释放指向对象并令 u 管理内置指针 q
+u.reset(nullptr); // 效果同 u = nullptr;
 ```
+
+利用 `release`，`reset` 和构造函数可以实现转移所有权  
+
+```C++
+unique_ptr<string> p1(new string("hello"));
+unique_ptr<string> p2(p1.release());
+unique_ptr<string> p3(new string("aloha"));
+p2.reset(p3.release());
+```
+
+可以将 `release` 的返回值保存在内置指针变量中，但必须记得 `delete`  
+可以拷贝或赋值将被销毁的 `unique_ptr`，如函数返回类型可以是 `unique_ptr`  
+返回时不执行拷贝构造函数和赋值运算符  
+
+```C++
+using upi = unique_ptr<int>;
+// 以下两种方式均可
+upi foo()
+{
+    return upi(new int(20));
+}
+upi bar()
+{
+    upi ret(new int 20);
+    return ret;
+}
+```
+
+## 7. weak_ptr
+
+不控制指向对象的生存期，其即使绑定 `shared_ptr` 也不会改变引用计数  
+
+```C++
+weak_ptr<T> w; // 空指针
+weak_ptr<T> w(sp); // 用 shared_ptr 初始化，T 必须能转化成 sp 指向的对象类型
+w = p; // p 可以是 shared_ptr 或 weak_ptr，赋值后共享对象
+w.reset(); // 将 w 置为空
+w.use_count(); // 共享对象的 shared_ptr 数量
+w.expired(); // use_count == 0
+w.lock(); // expired ? 空 shared_ptr : 指向 w 指向的对象的 shared_ptr
+```
+
+不能通过 `weak_ptr` 直接访问对象，因为其绑定的 `shared_ptr` 可能未指向对象
+
+```C++
+// 通过 weak_ptr 访问对象的安全方法
+if (shared_ptr<T> sp == w.lock())
+{
+    // 处理 sp
+}
+```
+
+## 8. 动态数组
