@@ -1,4 +1,4 @@
-# Chapter 6 类型处理
+# Chapter 6 类型别名、auto 和 decltype
 
 ## 1. 类型别名
 
@@ -7,7 +7,7 @@ typedef int* pint;
 using rint = int&;
 ```
 
-## 2. auto类型说明符
+## 2. auto 类型说明符
 
 1. 由编译器去分析赋值符号右边表达式的类型，故定义时必须有初始值，不可以只声明
 
@@ -31,7 +31,7 @@ using rint = int&;
     const auto &h = ci; // const int &
     ```
 
-## 3. decltype类型指示符
+## 3. decltype 类型指示符
 
 ```C++
 decltype(表达式) 变量;

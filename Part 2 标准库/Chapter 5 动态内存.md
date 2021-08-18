@@ -245,6 +245,7 @@ string *ps = new string[3]{"hello", string(), string(3, 'x')};
 在 `unique_ptr` 的元素类型后面加中括号表示动态数组  
 默认使用 `delete[]` 作为删除器  
 此时 `unique_ptr` 额外支持下标运算符操作  
+此时 `unique_ptr` 不支持解引用操作，故同样不支持 `->` 操作
 若使用 `shared_ptr` 则必须自定义删除器，不支持下标运算  
 
 ```C++
