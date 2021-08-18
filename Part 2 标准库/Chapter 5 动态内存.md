@@ -198,4 +198,106 @@ if (shared_ptr<T> sp == w.lock())
 }
 ```
 
-## 8. 动态数组
+## 8. 动态数组（不是数组类型）
+
+### 使用 new[] 分配动态数组
+
+```C++
+// Method 1
+int *p = new int[42];
+
+// Method 2
+typedef int intArr_t[42];
+// using intArr_t = int [42];
+int *p = new intArr_t;
+```
+
+`new[]` 返回的是元素类型的指针，而不是数组类型的指针  
+因此，动态数组不能使用 `begin()` 和 `end()`，因为没有数组维度信息  
+同样地，也不能使用范围 `for` 语句  
+
+### 初始化
+
+默认情况下动态数组中的元素使用默认初始化，在中括号后面加小括号可以值初始化  
+小括号中的值只能为空，故 `new` 后面不能使用 `auto`  
+也可以使用花括号列表初始化  
+
+```C++
+int *pi = new int[10](); // 10 个元素全部值初始化为 0
+string *ps = new string[3]{"hello", string(), string(3, 'x')};
+```
+
+若花括号中的元素数量不够，则剩余部分值初始化  
+反之，若元素数量过多，则抛出 `bad_array_new_length` 异常  
+
+### 空动态数组
+
+通常的数组的维度不能为 0，但动态数组维度可以为 0，此时指针不能解引用  
+类似 0 长度容器的尾后迭代器  
+
+### delete[]
+
+数组中的元素按照逆序销毁，空方括号表示此指针指向动态数组的第一个元素  
+不能混用 `delete` 和 `delete[]`  
+
+### 使用智能指针管理动态数组
+
+在 `unique_ptr` 的元素类型后面加中括号表示动态数组  
+默认使用 `delete[]` 作为删除器  
+此时 `unique_ptr` 额外支持下标运算符操作  
+若使用 `shared_ptr` 则必须自定义删除器，不支持下标运算  
+
+```C++
+// 使用智能指针创建长度为 10 的动态数组，并对数组进行处理
+
+// unique_ptr 版本
+unique_ptr<int[]> up(new int[10]);
+for (size_t i = 0; i < 10; ++i)
+{
+    up[i] = i;
+}
+up.release() // 使用 delete[]
+
+// shared_ptr 版本
+shared_ptr<int> sp(new int[10], [](int *p) {delete[] p;});
+for (size_t i = 0; i < 10; ++i)
+{
+    *(sp.get() + i) = i;
+}
+sp.reset(); // 使用 lambda
+```
+
+## 9. allocator
+
+可用于分离内存分配和对象构造的过程  
+
+```C++
+allocator<T> a; // 可为 T 类型的对象分配内存的 allocator 对象
+a.allocate(n); // 分配一段用于保存 n 个 T 对象的内存
+a.construct(p, args); // p 为 T 类型指针，指向一块原始内存，使用 args 调用构造函数
+a.destroy(p); // p 为 T 类型指针，对 p 指向的对象执行析构函数
+a.deallocate(p, n) // 对所有对象进行 destroy 操作后才能使用，释放从 p 开始保存 n 个 T 对象的内存
+```
+
+```C++
+// 使用范例
+allocator<string> alloc;
+string *p = alloc.allocate(3);
+string *q = p;
+alloc.construct(q++); // 空字符串
+alloc.construct(q++, "hello");
+alloc.construct(q++, 3, 'x');
+while (q != p);
+    alloc.destroy(--q);
+alloc.deallocate(p, 3);
+```
+
+### 拷贝和填充算法
+
+```C++
+// 以下被填充位置必须是足够大的原始内存
+uninitialized_copy(b, e, b2); // 将 [b, e) 内的元素拷贝到迭代器 b2 指定的原始内存中，返回最后一个拷贝的元素后面的迭代器
+uninitialized_copy_n(b, n, b2); // 将 [b, b + n) 内的元素拷贝到迭代器 b2 指定的原始内存中，返回最后一个拷贝的元素后面的迭代器
+uninitialized_fill(b, e, t); // 将 t 拷贝填充到 [b, e) 中
+uninitialized_fill_n(b, n, t); // 将 t 拷贝填充到 [b, b + n) 中
+```
