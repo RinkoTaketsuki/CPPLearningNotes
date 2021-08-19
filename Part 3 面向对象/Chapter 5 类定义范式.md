@@ -12,6 +12,8 @@ public:
     HasPtr(const HasPtr& p):
         ps(new std::string(*p.ps)), i(p.i) {}
     
+    HasPtr(HasPtr &&p) noexcept: ps(p.ps), i(p.i) {p.ps = nullptr;}
+    
     ~HasPtr() {delete ps;}
 
     HasPtr &operator=(const HasPtr &rhs)
@@ -25,6 +27,17 @@ public:
         i = rhs.i;
         return *this;
     }
+
+    // 使用 swap 进行赋值的版本，由于左边对象被交换到右边，非自赋值时会调用析构函数
+    // 该函数同时是拷贝和移动赋值运算符
+    // 当 p 的实参是左值时，调用拷贝构造函数进行初始化
+    // 当 p 的实参是右值时，调用移动构造函数进行初始化
+    HasPtr &operator=(HasPtr p) noexcept
+    {
+        swap(*this, p);
+        return *this;
+    }
+
 private:
     std::string *ps;
     int i;
@@ -66,7 +79,7 @@ public:
     #endif
 
     // 使用 swap 进行赋值的版本，由于左边对象被交换到右边，非自赋值时会调用析构函数
-    HasPtr &operator=(HasPtr p)
+    HasPtr &operator=(HasPtr p) noexcept
     {
         swap(*this, p);
         return *this;
@@ -104,6 +117,7 @@ inline void swap(HasPtr &p, HasPtr &q)
 class StrVec
 {
 public:
+    #define MOVE
     StrVec():
         elements(nullptr), first_free(nullptr), cap(nullptr) {}
     
@@ -112,6 +126,12 @@ public:
         std::pair<std::string*, std::string*> newData = alloc_n_copy(s.begin(), s.end());
         elements = newData.first;
         first_free = cap = newData.second;
+    }
+
+    StrVec(StrVec &&s) noexcept: elements(s.elements), first_free(s.first_free), cap(s.cap)
+    {
+        // 防止当前的空间被销毁
+        s.elements = s.first_free = s.cap = nullptr;
     }
 
     ~StrVec()
@@ -126,6 +146,19 @@ public:
         free();
         elements = data.first;
         first_free = cap = data.second;
+        return *this;
+    }
+
+    StrVec &operator=(StrVec &&rhs) noexcept
+    {
+        if (this != rhs)
+        {
+            free();
+            elements = rhs.elements;
+            first_free = rhs.first_free;
+            cap = rhs.cap;
+            rhs.elements = rhs.first_frss = rhs.cap = nullptr;
+        }
         return *this;
     }
 
@@ -173,6 +206,7 @@ private:
         }
     }
 
+    #ifndef MOVE
     // 获取更多内存并将已有元素拷贝到新内存空间中
     void reallocate()
     {
@@ -196,7 +230,25 @@ private:
         first_free = dest;
         cap = elements + newCapacity;
     }
+    #endif
 
+    // 使用移动迭代器的版本
+    void reallocate()
+    {
+        std::size_t newCapacity = size() ? 2 * size() : 1;
+        std::string 
+        *first = alloc.allocate(newCapacity),
+        *last = uninitialized_copy(
+            make_move_iterator(begin()),
+            make_move_iterator(end()),
+            first
+        );
+        free();
+        elements = first;
+        first_free = last;
+        cap = elements + newCapacity;
+    }
+    
     // 若空间已满，则分配新内存空间
     void chk_n_alloc()
     {
