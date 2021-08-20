@@ -97,3 +97,34 @@ auto foo(int) -> bool(*)(double); // 正确，尾置返回类型
 ```
 
 auto初始化作类型判断时，由于函数作为右值使用会转换为函数指针，故会判断为函数指针
+
+## 8. 函数对象
+
+具有函数调用运算符的对象称为函数对象  
+lambda 是函数对象，其不通过引用捕获的变量将作为其成员变量，并定义相应的构造函数  
+lambda 表达式产生的类不会有默认构造函数，赋值运算符和默认析构函数，是否含有默认拷贝构造函数和默认移动构造函数视捕获的变量类型而定  
+
+### 标准库定义的函数对象类模板
+
+头文件 `<functional>`  
+
+算术|关系|逻辑
+:-|:-|:-
+plus|equal_to|logical_and
+minus|not_equal_to|logical_or
+multiplies|greater|logical_not
+divides|greater_equal
+modulus|less
+negate|less_equal
+
+### 在算法中使用标准库函数对象
+
+```C++
+vector<int> vec = {1, 1, 4, 5, 1, 4};
+// 降序排序
+sort(vec.begin(), vec.end(), greater<int>());
+
+vector<int*> vecp;
+// 通常指针是无法比较的，通过此种方式可以比较
+sort(vecp.begin(), vecp.end(), less<int*>());
+```

@@ -272,4 +272,77 @@ public:
 
 ## 11. 函数调用运算符
 
-必须是成员函数，具有函数调用运算符的对象称为函数对象
+必须是成员函数，具有函数调用运算符的对象称为函数对象  
+
+> 可调用对象：函数、函数指针、lambda 表达式、`bind` 创建的对象、重载了函数调用运算符的类  
+> 可调用对象的类型：lambda 表达式为未命名类，函数和函数指针由返回和实参类型决定  
+> 相同返回和实参类型的普通函数、函数指针、lambda 表达式和函数对象类属于不同的类型，但它们的调用形式相同  
+
+### function 模板
+
+```C++
+function<T> f; // 空 function，T 是调用形式
+function<T> f(nullptr); // 空 function
+function<T> f(obj); // obj 可以是任意符合调用形式的可调用对象
+function<T> f = obj; // 同上
+(bool)f; // 空时为假，否则为真
+f(args); // 调用 f
+```
+
+类型成员|说明
+:-|:-
+`result_type`|返回类型
+`argument_type`|仅有一个形参时才有的类型，形参类型
+`first_argument_type`|仅有两个形参时才有的类型，第一个形参类型
+`second_argument_type`|仅有两个形参时才有的类型，第二个形参类型
+
+通过该模板，相同调用形式的不同类型的可调用对象可以统一转化为 `function<T>` 类型  
+
+```C++
+struct divide
+{
+    int operator()(int i, int j) { return i / j; }
+};
+
+int main()
+{
+    int add(int i, int j) { return i + j; }
+    auto mod = [] (int i, int j) { return i % j; };
+    // 编写计算器需要的函数 map
+    map<string, function<int(int, int)> > binops = {
+        {"+", add}, // 函数指针
+        {"-", std::minus<int>()}, // 标准库函数对象
+        {"/", divide()}, // 函数对象
+        {"*", [] (int i, int j) { return i * j; }}, // 未命名 lambda 对象
+        {"%", mod} // 已命名 lambda 对象
+    }
+    return 0;
+}
+```
+
+重载函数的名字不能直接存入 `function` 对象，需要新定义一个函数指针消除二义性  
+未命名 lambda 表达式不存在此问题  
+
+```C++
+int add(int, int);
+double add(double, double);
+function<int(int, int)> f(add); // 报错，即便 function 类中有调用方式
+int (*fp)(int, int) = add; // 函数指针只会接受正确的版本
+function<int(int, int)> f(fp); // 正确
+```
+
+## 12. 类型转换运算符
+
+必须是成员函数，不能转化为 `void` 类型和不能作为返回值的类型（如数组和函数类型）  
+可以是数组指针或函数指针类型或引用类型  
+无显式返回类型，无形参，通常是 `const` 成员  
+
+```C++
+class SmallInt
+{
+public:
+
+private:
+    std::size_t val;
+}
+```
