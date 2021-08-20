@@ -162,6 +162,25 @@ public:
         return *this;
     }
 
+    StrVec &operator=(initializer<string> il)
+    {
+        std::pair<std::string*, std::string*> data = alloc_n_copy(il.begin(), il.end());
+        free()
+        elements = data.first;
+        first_free = cap = data.second;
+        return *this;
+    }
+
+    std::string &operator[](std::size_t n)
+    {
+        return elements[n];
+    }
+
+    const std::string &operator[](std::size_t n) const
+    {
+        return elements[n];
+    }
+
     // 先检查容量再推入元素
     void push_back(const std::string &s)
     {

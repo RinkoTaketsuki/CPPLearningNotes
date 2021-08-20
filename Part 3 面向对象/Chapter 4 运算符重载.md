@@ -111,3 +111,165 @@ operator<<(std::ostream& out, const Sales_item& s)
     return out;
 }
 ```
+
+## 4. 输入运算符
+
+必须是非成员函数，返回 `istream` 引用  
+第一个形参是 `istream` 引用，第二个形参是需要输入的变量的非常量引用  
+输入运算符必须处理错误输入，如类型不正确，遇到 EOF 或其他流错误，以及自定义的格式错误  
+在使用输入结果之前必须检查是否正确输入  
+若发生输入错误前已经有一部分成员被改变，则发生错误后需要重置对象状态  
+由于通常需要访问非公有成员，故通常设置为友元  
+
+```C++
+std::istream& 
+operator>>(std::istream& in, Sales_item& s)
+{
+    double price;
+    in >> s.bookNo >> s.units_sold >> price;
+    // check that the inputs succeeded
+    if (in)
+        s.revenue = s.units_sold * price;
+    else 
+        s = Sales_item();  // input failed: reset object to default state
+    return in;
+}
+```
+
+## 5. 算术和关系运算符
+
+通常定义为非成员函数，参数是常量引用，返回一个新值  
+算术运算符通常使用复合赋值运算符实现，故一般定义算术运算符之前都要定义相应的复合赋值运算符  
+
+```C++
+Sales_data
+operator+(const Sales_data &lhs, const Sales_data &rhs)
+{
+    Sales_data sum = lhs;  // copy data members from lhs into sum
+    sum += rhs;            // add rhs into sum
+    return sum;
+}
+```
+
+### 相等运算符
+
+定义时应满足传递性，即 `a == b && b == c` 可得出 `a == c`  
+若定义了 `==`，则应同时定义 `!=`，直接通过调用 `==` 实现即可  
+
+```C++
+inline
+bool operator==(const Sales_data &lhs, const Sales_data &rhs)
+{
+    return lhs.isbn() == rhs.isbn() && 
+           lhs.units_sold == rhs.units_sold && 
+           lhs.revenue == rhs.revenue;
+}
+
+inline
+bool operator!=(const Sales_data &lhs, const Sales_data &rhs)
+{
+    return !(lhs == rhs);
+}
+```
+
+### 小于运算符
+
+许多关联容器和算法需要使用该运算符，定义原则是：  
+
+- 与关联容器对关键字的要求一致  
+- 若有 `a != b`，则 `a < b` 或 `b < a` 至少有一个成立，常见的不符合情况是只比较某一个成员而不比较其他成员，但 `==` 运算符却比较了其他成员  
+
+## 6. 花括号赋值运算符
+
+必须是成员函数，返回当前类的引用，参数是 `initializer_list`  
+例子见 Chapter 5  
+
+## 7. 复合赋值运算符
+
+通常是成员函数，返回当前类的引用，参数是常量引用  
+
+```C++
+// member binary operator: left-hand operand is bound to the implicit this pointer
+// assumes that both objects refer to the same book
+Sales_data& Sales_data::operator+=(const Sales_data &rhs)
+{
+    units_sold += rhs.units_sold;
+    revenue += rhs.revenue;
+    return *this;
+}
+```
+
+## 8. 下标运算符
+
+必须是成员函数，一般返回元素的引用，一般需要常量和非常量版本  
+例子见 Chapter 5  
+
+## 9. 递增和递减运算符  
+
+通常是成员函数
+前置版本无形参，后置版本有一个 `int` 形参，但不使用，编译器默认将实参设为 0  
+前置版本返回当前对象的引用，后置版本返回一个值  
+该类运算符经常用于类似迭代器行为的类中，定义时需要检查递增递减行为是否会导致越界  
+后置版本在函数开头需要定义一个变量记录 `*this`，最后返回这个变量，使用前置版本实现递增递减  
+
+```C++
+class A
+{
+private:
+    int mem;
+public:
+    A(int n): mem(n) {}
+    A &operator++()
+    {
+        ++mem;
+        return *this;
+    }
+    // 不使用的形参可以不命名
+    A operator++(int)
+    {
+        A ret = *this;
+        ++*this;
+        return ret;
+    }
+}
+
+A a(20);
+a.operator++(); // 显式调用前置版本
+a.operator++(0); // 显式调用后置版本
+```
+
+## 10. 解引用和成员访问箭头运算符
+
+在类似迭代器和智能指针的类中经常使用，箭头必须是成员函数，解引用一般是成员函数  
+通常设置为 `const` 成员，无形参，解引用返回指向元素的引用，箭头返回解引用运算符返回值的地址  
+解引用运算符需要检查当前指针是否指向对象  
+
+```C++
+class intPtr
+{
+private:
+    std::vector<int> &m_vec;
+    std::size_t m_curr;
+
+public:
+    intPtr(std::vector<int> &vec, std::size_t curr): 
+        m_vec(vec), m_curr(curr) {}
+    
+    int &operator*() const
+    {
+        if (m_curr >= m_vec.size())
+            throw std::out_of_range("Invalid position!");
+        else
+            return m_vec[m_curr];
+    }
+
+    int *operator->() const
+    {
+        return &this->operator*();
+    }
+}
+```
+
+## 11. 函数调用运算符
+
+必须是成员函数，具有函数调用运算符的对象称为函数对象
