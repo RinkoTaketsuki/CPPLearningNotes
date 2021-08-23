@@ -341,8 +341,84 @@ function<int(int, int)> f(fp); // 正确
 class SmallInt
 {
 public:
-
+    SmallInt(int i = 0): val(i)
+    {
+        if (i < 0 || i > 255)
+            throw std::out_of_range("Bad SmallInt Value");
+    }
+    operator int() const { return val; }
 private:
     std::size_t val;
 }
+
+SmallInt si; // 调用默认构造函数
+si = 4; // 调用转换构造函数将字面值 4 转化为 SmallInt，然后调用 SmallInt::operator=
+si + 3; // 调用 SmallInt::operator int 将 si 转化为 int，然后执行 int 加法
+
+// 用户自定义的类型转换只能隐式执行一次，但其之前或之后可以运行内置的类型转换
+SmallInt si = 3.14 // 先执行内置类型转换 double -> int，再执行转换构造函数
+si + 3.14; // 先调用 SmallInt::operator int 将 si 转化为 int，再执行内置类型转换 int -> double，然后执行 double 加法
+```
+
+不能滥用自定义类型转换运算符  
+
+```C++
+// 假设 istream 支持向 bool 类型的隐式转换
+int i = 20; cin << i;
+// cin 会被转化为 bool 值，然后该值会被转化为 int，最终执行 int 左移
+```
+
+### 显式类型转换运算符
+
+在函数名前面加 `explicit` 标识符，表示不会用于隐式类型转换，必须显式调用或使用显式强转  
+但以下的例外情况可以隐式转换：  
+
+- `if`，`while`，`do`，`for` 语句的条件部分  
+- `!`，`&&`，`||` 运算符的运算对象  
+- `?:` 运算符的条件部分  
+
+`operator bool` 经常被定义，且定义成 `explicit` 的  
+`istream` 的 `operator bool` 即为 `explicit` 的，返回 `istream::good()`  
+
+### 二义性问题
+
+转换构造函数和类型转换运算符极易产生二义性问题，故有以下的经验规则：  
+
+- 勿定义相同类型转换：即在 A 中定义参数类型为 B 的转换构造函数，同时在 B 中定义转换为 A 的运算符  
+- 尽量避免定义转换为内置算术类型的运算符，尤其是已经定义了一个这种运算符时：
+
+    1. 不要再定义接受内置算术类型的运算符，因为此时如果用户试图使用该运算符，则类型转换操作会执行，然后使用内置版本的运算符  
+    2. 不要定义多个转换为内置算术类型的运算符，而是让内置类型转换执行相应的任务  
+
+- 总之，除了 `explicit operator bool` 尽量别定义别的类型转换运算符，尽量限制使用支持隐式的转换构造函数  
+
+二义性问题也存在于函数重载问题中  
+
+```C++
+struct A { A(int); };
+struct B { B(int); };
+struct C { C(double); };
+foo(const A&);
+foo(const B&);
+foo(const C&);
+foo(10);
+/* 如果只定义了 A 和 B，显然调用具有二义性
+ * 如果只定义了 A 和 C，也具有二义性，因为都属于类类型转换，不会考虑内置类型转换
+ */
+```
+
+```C++
+class SmallInt
+{
+    friend operator+(const SmallInt&, const SmallInt&);
+public:
+    smallInt(int i = 0);
+    operator int() const { return val; }
+private:
+    std::size_t val;
+};
+
+SmallInt s1, s2;
+s1 + s2; // 使用重载版本的函数
+int i = s1 + 0; // 具有二义性，使用重载和内置版本的函数均可
 ```
