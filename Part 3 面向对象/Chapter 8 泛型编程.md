@@ -259,3 +259,61 @@ fobj(m, n); // 第一个 m 转化为 int，T 实例化为 long
 ## 13. 函数模板显式实参
 
 函数模板的返回类型涉及模板形参时，其可能无法被推断出来，此时必须显式指定模板实参  
+显式指定实参的顺序是从左到右，若指定的实参数量不够则右边部分由编译器推断  
+已经指定了模板实参的函数实参执行正常的类型转换  
+
+```C++
+template <typename T> fobj(T, T);
+long n = 1;
+fobj<int>(n, 20); // T = int，n 转化为 int
+fobj<long>(n, 20); // T = long，20 转化为 long
+```
+
+## 14. 使用尾置返回类型指定返回类型  
+
+显式实参无法解决所有的返回类型问题，如下例，函数形参为迭代器类型，需要返回迭代器指向的元素类型  
+此时只能用尾置返回类型和 `decltype` 解决  
+
+```C++
+// 如果强行使用前置返回类型，则会导致 b 未定义，无法使用 decltype
+template<typename It>
+auto f(It b, It e) -> decltype(*b)
+{
+    return *b;
+}
+
+// 利用标准库的类型转换模板，实现返回拷贝
+// remove_reference<Class&> = Class
+// *b 是元素的引用类型
+template<typename It>
+auto f(It b, It e) -> remove_reference<decltype(*b)>::type
+{
+    return *b;
+}
+```
+
+## 15. 标准类型转换模板
+
+`Mod`|`T`|`Mod<T>::type`
+:-|:-|:-
+`remove_reference`|X& 或 X&&|X
+-|其他 T|不变
+`add_const`|X& 或 const X 或函数 X|不变
+-|其他 T|const T
+`add_lvalue_reference`|X&|不变
+-|X&&|X&
+-|其他 T|T&
+`add_rvalue_reference`|X& 或 X&&|不变
+-|其他 T|T&&
+`remove_pointer`|X*|X
+-|其他 T|不变
+`add_pointer`|X& 或 X&&|X*
+-|其他 T|T*
+`make_signed`|unsigned X|X
+-|其他 T|不变
+`make_unsigned`|带符号类型 X|unsigned X
+-|其他 T|不变
+`remove_extent`|X[n]|X
+-|其他 T|不变
+`remove_all_extents`|X[n1][n2]...|X
+-|其他 T|不变
