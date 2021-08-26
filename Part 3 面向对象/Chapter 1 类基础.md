@@ -63,6 +63,7 @@ void A::Z(){fr_f()}; // 正确
 
 在public处使用using或typedef规定类型别名，则类外部可以使用这个别名，以实现封装  
 须注意类型成员必须先定义后使用，故一般声明在类成员的最前面
+当为某命名空间内类型成员指定别名时，应该使用 `typedef typename NameSpace::Type`，以指明 Type 是类型成员而不是其他成员  
 
 ## 8. 显式 inline 成员函数
 
