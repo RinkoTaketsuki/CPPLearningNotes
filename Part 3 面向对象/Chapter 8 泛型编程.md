@@ -229,8 +229,8 @@ extern template class A<int>;
 算术转换、派生类向基类的转换、自定义的转换不会应用于函数模板  
 
 ```C++
-template <typename T> fobj(T, T);
-template <typename T> fref(const T&, const T&);
+template <typename T> void fobj(T, T);
+template <typename T> void fref(const T&, const T&);
 string s1;
 const string s2;
 fobj(s1, s2); // T = string，const 可以忽略
@@ -243,7 +243,7 @@ fref(a, b); // 错误
 若某函数模板有多个形参使用相同的模板形参，则实例化时必须使用能推断为一致类型的实参  
 
 ```C++
-template <typename T> fobj(T, T);
+template <typename T> void fobj(T, T);
 long n = 1;
 fobj(10, n); // 错误，T 不知道是 int 还是 long
 ```
@@ -251,7 +251,7 @@ fobj(10, n); // 错误，T 不知道是 int 还是 long
 至于不涉及模板形参的形参，则执行正常的类型转换  
 
 ```C++
-template <typename T> fobj(int, T);
+template <typename T> void fobj(int, T);
 long m = 1, n = 2;
 fobj(m, n); // 第一个 m 转化为 int，T 实例化为 long
 ```
@@ -263,7 +263,7 @@ fobj(m, n); // 第一个 m 转化为 int，T 实例化为 long
 已经指定了模板实参的函数实参执行正常的类型转换  
 
 ```C++
-template <typename T> fobj(T, T);
+template <typename T> void fobj(T, T);
 long n = 1;
 fobj<int>(n, 20); // T = int，n 转化为 int
 fobj<long>(n, 20); // T = long，20 转化为 long
@@ -317,3 +317,164 @@ auto f(It b, It e) -> remove_reference<decltype(*b)>::type
 -|其他 T|不变
 `remove_all_extents`|X[n1][n2]...|X
 -|其他 T|不变
+
+## 16. 函数指针指向函数模板实例
+
+给函数指针赋给函数模板时，根据函数指针的返回和形参类型实例化  
+但如下情况会出问题  
+
+```C++
+template <typename T> int fref(const T&, const T&);
+void func(int(*)(const int&, const int&));
+void func(int(*)(const string&, const string&));
+func(fref); // 错误，不知道 T 实例化为 int 还是 string
+func(fref<int>); // 使用显式模板实参可以消除歧义
+```
+
+## 17. 实参是引用类型时的类型推断
+
+> 引用折叠：当模板实参类型或类型别名的原类型为引用类型时，在其后面加引用符号会进行引用折叠  
+
+`X& &`，`X& &&`，`X&& &` 都将被折叠为 `X&`
+`X&& &&` 将被折叠为 `X&&`
+
+```C++
+int i; const int ci;
+// f1 函数实参必须是左值
+template <typename T> void f1(T&);
+f1(i); // T = int
+f1(ci); // T = const int
+f1(10); // 错误
+
+template <typename T> void f2(const T&);
+f2(i); // T = int
+f2(ci); // T = int
+f2(10); // T = int
+
+template <typename T> void f3(T&&);
+f3(10); // T = int
+f3(i); // T = int&，折叠后函数实参为 int&
+f3(ci); // T = const int&，折叠后函数实参为 const int&
+```
+
+```C++
+// 右值引用函数形参可能引发的错误
+// 若 val 为 int 右值，则 T = int；若 val 为 int 左值，则 T = int&
+template <typename T> void f(T&& val)
+{
+    // 该语句可能是拷贝初始化，也有可能是绑定引用
+    T t = val;
+    // 该语句可能影响 val
+    t = foo(t);
+    // 如果 t 是引用类型，则判断条件永远为 true
+    if (val == t) {}
+}
+```
+
+## 18. std::move 的原理
+
+```C++
+template <typename T>
+typename remove_reference<T>::type&&
+move(T &&t)
+{
+    return static_cast<typename remove_reference<T>::type&&>(t);
+}
+```
+
+当传入右值时，T 实例化为对应类型，`static_cast` 什么也不做  
+当传入左值时，函数形参类型为左值引用，`static_cast` 将其转化为右值引用  
+
+## 19. 使用 std::forward 保持类型信息  
+
+`std::forward` 是函数模板，必须显式实例化，其返回类型为在模板实参的基础上添加 `&&`，可能进行引用折叠  
+如此，`std::forward` 可用于保持函数实参的引用和 `const` 属性  
+调用时通常不省略 `std::` 以避免歧义  
+
+```C++
+int i;
+void g(int &&rv, int &lv);
+// 翻转函数
+template <typename F, T1, T2>
+void flip(F f, T1 &&t1, T2 &&t2)
+{
+    f(std::forward<T2>(t2), std::forward<T1>(t1));
+}
+/* 首先，F = void(*)(int&&, int&)，T1 = int&，T2 = int
+ * 得到实例化后的结果 void flip(void(*)(int&&, int&) f, int &t1, int &&t2)
+ * flip 传递实参：
+ * void(*)(int&&, int&) f = g;
+ * int &t1 = i;
+ * int &&t2 = 42;
+ * std::forward<T2>(t2) 返回 int&& 类型，是右值，而 t2 是左值
+ * std::forward<T1>(t1) 返回 int& 类型，是左值
+ * g 传递实参：
+ * int &&rv = std::forward<T2>(t2)
+ * int &lv = std::forward<T1>(t1)
+ */
+flip(g, i, 42);
+```
+
+## 20. 重载函数模板  
+
+函数模板可以被函数模板或非模板函数重载  
+所有可行的模板实例都会参与原本的匹配规则，此外当有多个函数提供同样好的匹配时还有一些规则：  
+
+- 如果同样好的函数中只有一个是非模板函数，则选择此函数  
+- 如果同样好的函数中没有非模板函数，且有一个模板比其他的更特例化，则选择该模板  
+- 否则有歧义  
+
+```C++
+template <typename T> void fcn(const T& cr);
+template <typename T> void fcn(T* p);
+string s;
+using strp = string*;
+using cstrpr = const strp&;
+/* 注意在指针类型前面加 const 的情况与一般类型不同
+ * const strp 展开后是 string *const，而不是 const string*
+ */
+const strp pc = &s;
+/* 注意课本上写的有问题
+ * 如果选择第一个模板，&s 是 strp 类型，T 被实例化为 strp，
+ * 函数实例为 void fcn(cstrpr cr)
+ * 由于 cstrpr 中的底层 const 可以看作是加到 strp 上的顶层 const
+ * 故函数实例展开为 void fcn(string *const &cr)
+ * 即相当于 string *const 类型的引用
+ * 如果选择第二个模板，&s 是 strp 类型，T 被实例化为 string
+ * 函数实例为 void fcn(string *p)
+ * 因此，当 &s 被传入这两个实例时，第一个会进行 string* -> string *const 的转换，而第二个不用
+ * 故选择第二个模板
+ */
+fcn(&s);
+/* 如果选择第一个模板，与上面同理，函数实例为
+ * void fcn(const string *const &cr)
+ * 如果选择第二个模板，与上面同理，函数实例为
+ * void fcn(const string *cr)
+ * 因此，当 cp 被传入这两个实例时，第一个会进行 const string* -> const string *const 的转换，而第二个不用
+ * 故选择第二个模板
+ */
+const string *cp = &s;
+fcn(cp);
+/* 在类型别名中，套娃的 const 将被忽略
+ * const cchar6& 展开为 const char(&)[6]，是对 char[6] 的常量引用
+ */
+using cchar6 = const char[6];
+const cchar6 &r = "hello";
+/* 如果选择第一个模板，则 T = char[6]（忽略套娃 const），函数实例化为 void fcn(const char (&cr)[6] cr)
+ * 如果选择第二个模板，则 T = const char（数组到指针的转换），函数实例化为 void fcn(const char* p)
+ * 因此，当 "hello" 被传入这两个实例时，第一个会进行 const char[6] -> char[6] 的转换，第二个会进行数组到指针的转换
+ * 故选择第二个模板
+ */
+fcn("hello");
+// 如果希望 fcn 把 C 字符串当成 string 处理，则可以加上这三个非模板函数，且第一个函数必须最先声明
+// 后两个函数调用第一个函数，而不调用函数模板
+void fcn(const string &cr);
+void fcn(char *p)
+{
+    return fcn(string(p));
+}
+void fcn(const char *p)
+{
+    return fcn(string(p));
+}
+```
