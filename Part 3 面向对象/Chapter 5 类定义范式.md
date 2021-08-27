@@ -181,28 +181,39 @@ public:
         return elements[n];
     }
 
-    // 先检查容量再推入元素
     void push_back(const std::string &s)
     {
         chk_n_alloc();
         alloc.construct(first_free++, s);
     }
+
+    template <typename... Args>
+    void emplace_back(Args &&...args)
+    {
+        chk_n_alloc();
+        alloc.construct(first_free++, std::forward<Args>(args)...)
+    }
+
     std::size_t size() const
     {
         return first_free - elements;
     }
+
     std::size_t capacity() const
     {
         return cap - elements;
     }
+
     std::string *begin() const
     {
         return elements;
     }
+
     std::string *end() const
     {
         return first_free;
     }
+
 private:
     // 分配内存并将范围内元素拷贝到新内存空间中
     // 返回新内存空间指针和拷贝后的元素的尾后指针

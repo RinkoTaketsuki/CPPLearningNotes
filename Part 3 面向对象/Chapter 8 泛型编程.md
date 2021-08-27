@@ -478,3 +478,89 @@ void fcn(const char *p)
     return fcn(string(p));
 }
 ```
+
+## 21. 可变参数模板
+
+```C++
+// Args：模板参数包，rest：函数参数包
+template <typename T, typename... Args>
+void foo(const T &t, const Args &...rest)
+{
+    // sizeof... 运算符返回包大小（unsigned long）
+    // sizeof... 不会对运算对象求值
+    sizeof...(Args);
+    sizeof...(rest);
+}
+string s;
+foo(0, s, 0, .0); // T = int, Args = {string, int, double}
+foo(s, 0, "hello"); // T = string, Args = {int, char[6]}
+foo("hi"); // T = char[3]，Args = {}
+```
+
+可变参数函数模板通常是递归的，下面为一个例子：  
+
+```C++
+// 终止递归并打印最后一个参数
+template <typename T>
+ostream &print(ostream &os, const T &t)
+{
+    return os << t;
+}
+// 打印除第一个参数外剩下的所有参数
+template <typename T, typename... Args>
+ostream &print(ostream &os, const T &t, const Args &...rest)
+{
+    os << t << ", ";
+    return print(os, rest...)
+}
+```
+
+```C++
+// 更复杂的解包
+template <typename T>
+T& plus1(T& t) { return ++t; }
+template <typename T, typename... Args>
+ostream &print(ostream &os, const T &t, const Args &...rest)
+{
+    os << t << ", ";
+    // 对 rest 的每一个元素执行 plus1 操作
+    // ... 将 plus1(rest) 解包
+    // 然后作为参数赋给 print
+    // 注意不能写成 plus1(rest...)，否则就是调用一次 plus1，参数是 rest 中全部元素  
+    return print(os, plus1(rest)...))
+}
+```
+
+参数包可以转发，见 Chapter 5  
+
+## 22. 模板特例化
+
+有时定义的模板不适合所有类型，针对一些特殊类型做专门的定义  
+用 `template <>` 表示特例化一个模板，此时函数形参要与原模板吻合  
+函数模板特例化以后是原模板一个实例，而不是一个模板，不会影响原模板的函数重载  
+但如果定义成非模板函数则会影响重载  
+类模板特例化例子如下：  
+
+```C++
+// 特例化 hash，假设自定义类为 X，支持 == 运算符
+// X 的成员为 A 类型的 a，B 类型的 b，C 类型的 c，都是标准库或内置类型
+// 这样当无序容器存储 X 对象时就有默认哈希函数了
+// 在 X 类中要把这个 hash<X> 声明为友元
+namespace std
+{
+template <>
+struct hash<X>
+{
+    typedef size_t result_type;
+    typedef X argument_type;
+    size_t operator()(const X&) const;
+}
+
+size_t hash<X>::operator()(const X &x) const
+{
+    return hash<A>()(a) ^ hash<B>()(b) ^ hash<C>()(c);
+}
+}
+```
+
+类模板可以部分特例化：  
