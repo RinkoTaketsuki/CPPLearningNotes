@@ -174,6 +174,7 @@ int compare(const T &v1, const T &v2, F f = F())
 
 非模板类的成员函数模板和通常函数模板用法相同，使用时推断模板实参  
 类模板的成员模板在外部定义时，必须同时提供类模板和成员模板的形参列表  
+成员模板不能是虚函数  
 
 ```C++
 template <typename T> class A
@@ -554,7 +555,7 @@ struct hash<X>
     typedef size_t result_type;
     typedef X argument_type;
     size_t operator()(const X&) const;
-}
+};
 
 size_t hash<X>::operator()(const X &x) const
 {
@@ -563,4 +564,36 @@ size_t hash<X>::operator()(const X &x) const
 }
 ```
 
-类模板可以部分特例化：  
+类模板的部分特例化，即指定一部分实例的特例：  
+
+```C++
+// remove_reference 的实现
+template <class T>
+struct remove_reference { typedef T type; };
+template <class T>
+struct remove_reference<T&> { typedef T type; };
+template <class T>
+struct remove_reference<T&&> { typedef T type; };
+```
+
+可以单独特例化类模板的成员函数：  
+
+```C++
+template <typename T>
+struct Foo
+{
+    T mem;
+public:
+    Foo(const T &t): mem(t) {}
+    void Bar()
+    {
+        /* 原模板的函数体内容 */
+    }
+};
+
+template<>
+void Foo::Bar<int>()
+{
+    /* Foo<int> 的函数体内容 */
+}
+```
