@@ -242,10 +242,9 @@ while (getline(cin, line))
 ## 8. 操纵符详解
 
 > 操纵符为一个函数或一个对象，能改变流的状态，可作为输入输出运算符的运算对象  
+> set 开头的操作符在 `<iomanip>` 头文件中  
 
-### 改变格式状态
-
-#### 整数的格式
+### 整数的格式
 
 通常是成对的，一个设置操纵符和一个复原操作符  
 
@@ -255,12 +254,149 @@ while (getline(cin, line))
 `hex`：使整型值打印为十六进制格式（没有前面的 0x）  
 `dec`：使整型值打印为十进制格式（默认）  
 `default`：使整型值打印为十进制格式  
-`showbase`：显示八进制和十六进制的前缀  
-`noshowbase`：不显示八进制和十六进制的前缀（默认）  
-`uppercase`：使十六进制的 X 和 A~F 大写  
-`nouppercase`：使十六进制的 x 和 a~f 小写（默认）  
+`setbase(b)`：将整型值设置为 b（`int`） 进制格式，仅支持 8，10，16，否则重置  
 
-#### 浮点数的格式
+### 浮点数的格式
 
 默认情况下小数点后有六位，若无小数部分不打印小数点  
 非常大和非常小的值会打印为科学计数法形式  
+
+```C++
+// 设置精度
+ostream os;
+
+os.precision(); // 返回当前精度（streamsize）
+os.precision(n); // 将当前精度改为 n（streamsize），返回修改前的精度
+
+setprecision(n); // 操纵符，将当前精度改为 n（int）
+```
+
+`showpoint`：浮点值总是显示小数点  
+`noshowpoint`：浮点值仅当含小数部分时才显示小数点（默认）  
+`fixed`：浮点值显示为定点十进制  
+`scientific`：浮点值显示为科学计数法  
+`hexfloat`：浮点值显示为十六进制  
+`defaultfloat`：重置浮点值显示为十进制，是否科学计数法看情况（默认）  
+
+### 其他格式
+
+`uppercase`：使十六进制的 X 和 A~F 大写，使科学计数法的 E 大写  
+`nouppercase`：使十六进制的 x 和 a~f 小写，使科学计数法的 e 小写（默认）  
+`showbase`：显示八进制和十六进制的前缀  
+`noshowbase`：不显示八进制和十六进制的前缀（默认）  
+`showpos`：非负数显示正号  
+`noshowpos`：非负数不显示正号（默认）  
+`left`：左对齐输出  
+`right`：右对齐输出（默认）  
+`internal`：两端对齐输出，左对齐符号，右对齐值  
+`skipws`：输入运算符跳过空白符（默认）  
+`noskipws`：输入运算符不跳过空白符  
+`setw(n)`：指定下一次输出的最小空间 n（`int`）  
+`setfill<char_type>(ch)`：指定使用 ch（`char_type`）代替空格作为补白字符  
+
+## 9. 未格式化 IO
+
+> 将 IO 流当作单纯的字节序列来处理  
+
+```C++
+int ch; // 注意不能定义成 char 类型，否则无法保存 EOF 宏
+// 此外 如果 char 是 signed char，则问题更多
+
+// 从 is 读取一个字节到 ch，返回 istream 引用
+is.get(ch);
+// 向 os 写入一个字节，返回 ostream 引用
+is.get(ch);
+// 从 is 读取一个字节作为 int 返回
+is.get();
+// 将 ch 放回 is 的读取位置，返回 istream 引用
+is.putback(ch);
+// 反向移动 is 的读取位置，相当于撤销 is.get() 的操作，返回 istream 引用
+is.unget();
+// 将下一个要读取的字节作为 int 返回，但不移动读取位置
+is.peek();
+```
+
+`putback()` 和 `unget()` 不能连续调用，标准库只能保存上一次的读取内容  
+在返回 `int` 的函数中，如果读取的是真实字符，则将 `char` 转化为 `unsigned char`，再提升到 `int`  
+故真实字符的返回值总是正的，若读取到 EOF，则返回标准库规定的负值（`cstdio` 中的 `EOF` 宏）  
+
+```C++
+// 多字节操作
+char s[256];
+streamsize size;
+char delim;
+
+/* 从 is 中读取最多 size 个字节并保存在 sink（char*） 中
+ * 遇到 delim 或分隔符或 EOF 时停止，遇到的 delim 或分隔符会保存在输入流中不读取
+ * 返回 istream 引用
+ */
+is.get(s, size, delim);
+// 与上一个函数相似，但会读取并丢弃 delim 或分隔符
+is.getline(s, size, delim);
+// 读取最多 size 个字节到 s 中，返回 istream 引用
+is.read(s, size)
+/* 返回上一次未格式化读取操作的字节数（streamsize）
+ * peek，unget，putback 会使其返回 0
+ */
+is.gcount();
+// 将 s 中的 size 个字节写入到 os 中，返回 ostream 引用
+os.write(s, size);
+// 读取并忽略最多 size 个字符，包括 delim
+// size 默认为 1，delim 默认为 EOF
+is.ignore(size, delim);
+```
+
+## 10. 流随机访问
+
+`istream` 和 `ostream` 类型通常不支持随机访问  
+
+```C++
+// 后缀 g 表示输入流，后缀 p 表示输出流
+
+/* 返回当前位置（流类型::pos_type）
+ * 位置标记只有一个，即 fstream 和 stringstream 的
+ * g 和 p 版本返回的标记相同
+ */
+tellg(); tellp();
+
+seekg(pos); seekp(pos); // 跳转到指定位置，输入值通常为 tell 的返回值
+
+/* 跳转到 form 之前或之后 off（流类型::off_type）个字符
+ * form 的可选值如下：（命名空间为当前流类型）
+ * beg：表示开始位置
+ * cur：表示当前位置
+ * end：表示结束位置
+ */
+seekg(off, form); seekp(off, form)
+```
+
+```C++
+// 使用例：在文件的最后一行写入文件每一行的起始 offset
+
+int main()
+{
+    // 开始的位置便是文件末尾
+    fstream inOut("filename", fstream::ate | fstream::in | fstream::out);
+    if (!inOut)
+    {
+        cerr << "Unable to open file!\n";
+        return EXIT_FAILURE; // 定义于 cstdlib
+    }
+    auto endMark = inOut.tellg(); // 保存当前的文件末尾
+    inOut.seekg(0, fstream::beg); // 重定位到文件开始
+    size_t cnt = 0; // 记录字节数
+    string line; // 保存文件行
+    while (!inOut && inOut.tellg() != endMark && getline(inOut, line))
+    {
+        cnt += line.size() + 1; // + 1 表示换行符
+        auto mark = inOut.tellg(); // 记录当前读取位置
+        inOut.seekp(0, fstream::end); // 重定位到文件结束
+        inOut << cnt; // 输出数据
+        if (mark != endMark) inOut << "　"; // 若未读取到原来的最后一行，输出空格
+        inOut.seekg(mark); // 跳转回原来的读取位置
+    }
+    inOut.seekp(0, fstream::end);
+    inOut << '\n'; // 最后输出换行符
+    return 0;
+}
+```
