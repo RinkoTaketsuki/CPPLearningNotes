@@ -66,22 +66,87 @@ catch(/* exception declaration3 */)
 
 ## 4. 函数 try 语句块
 
-## 8. 异常类
+构造函数初始值列表抛出的异常无法被构造函数体内的 `catch` 子句捕获，必须使用函数 `try` 语句块  
+
+```C++
+class A
+{
+    int mem1;
+    string mem2;
+public:
+    A(int n, const string &s) try : mem1(n), mem2(s)
+    {
+        /* 构造函数体 */
+    }
+    catch (/* 异常声明 */)
+    {
+        /* 异常处理 */
+    }
+};
+```
+
+须注意的是，构造函数的形参初始化过程中抛出的异常属于上一级的调用表达式抛出的异常，由调用者处理  
+
+## 5. noexcept
+
+指定函数不会抛出异常，有助于优化性能  
+该声明紧跟在参数列表后面，在后置返回类型之前，函数的声明和定义必须同时声明或不声明 `noexcept`  
+如果是成员函数，则其位置在 `const` 和引用限定符之后，在 `= 0`，`final` 和 `override` 之前  
+函数指针的声明和定义也可以声明 `noexcept`，但此时该指针只能指向 `noexcept` 函数  
+如果 `noexcept` 函数违反约定抛出异常，则会直接调用 `terminate`  
+若基类的虚函数声明了 `noexcept`，则派生类派生出来的虚函数也必须声明 `noexcept`  
+合成拷贝控制成员调用的某个函数如果不是 `noexcept` 的，则合成不是 `noexcept` 的版本，否则合成版本是 `noexcept` 的  
+如果未定义 `noexcept` 或 `noexcept(false)` 的析构函数，则会视情况合成一个 `noexcept` 或 `noexcept(false)` 的析构函数  
+
+### noexcept 实参
+
+接受一个 `bool` 实参，如果实参是 `true` 则表示不会抛出异常，反之表示可能抛出异常（相当于不声明 `noexcept`）  
+
+### noexcept 运算符
+
+运算对象为 `函数(实参)`，返回 `constexpr bool`，表示函数是否会抛出异常  
+若函数声明为 `noexcept`，则返回 `true`  
+若函数调用的所有函数都是 `noexcept` 的且自身无 `throw` 语句时，返回 `true`  
+该运算符不会执行运算对象  
+
+```C++
+// 令 f 和 g 的异常说明一致
+void f() noexcept(noexcept(g()));
+```
+
+## 6. 异常类
 
 > 在此只讨论 `stdexcept` 头文件中定义的异常类
 
-1. 只能默认初始化 `exception` 类，其他必须用 `string` 或 C 字符串初始化
-2. `what()` 无参数，返回 `const char*`
-
 类名|说明
-:-:|:-:
+:-|:-
 `exception`|异常类
-`runtime_error`|运行时错误类
-`range_error`|
-`overflow_error`|
-`underflow_error`|
-`logic_error`|逻辑错误类
-`domain_error`|
-`invalid_argument`|
-`length_error`|
-`out_of_range`|
+--> `bad_cast`|
+--> `bad_alloc`|
+--> `runtime_error`|运行时错误类
+------> `range_error`|
+------> `overflow_error`|
+------> `underflow_error`|
+--> `logic_error`|逻辑错误类
+------> `domain_error`|
+------> `invalid_argument`|
+------> `length_error`|
+------> `out_of_range`|
+
+有默认构造函数：`exception`，`bad_cast`，`bad_alloc`  
+其他类必须用 `string` 或 C 字符串初始化  
+
+`exception` 有拷贝构造函数，拷贝赋值运算符，虚析构函数和虚 `what()`，两个虚函数具有多态性  
+
+## 7. 自定义异常类
+
+```C++
+// 常见自定义方法举例
+
+class my_error: public std::runtime_error
+{
+public:
+    explicit my_error(const std::string &s):
+        std::runtime_error(s);
+};
+```
