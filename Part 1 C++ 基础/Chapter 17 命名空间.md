@@ -208,6 +208,7 @@ int main()
     sp::A obj;
     f1(obj); // 正确
     f2(); // 错误
+    return 0;
 }
 ```
 
@@ -220,4 +221,42 @@ int main()
 
 ## 12. 重载与实参查找特例
 
+每个实参类以及实参类的直接或间接基类所属的命名空间中的同名函数都将作为候选函数，即便有些函数在调用处不可见  
+
+```C++
+namespace sp
+{
+    class B;
+    void foo(const B&);
+}
+
+class D : public sp::B {};
+
+int main()
+{
+    D obj;
+    foo(obj); // 正确，在 D 的基类 B 所属的命名空间 sp 中寻找到 foo
+    return 0;
+}
+```
+
 ## 13. 重载与 using 声明或指示
+
+`using` 声明只是声明一个名字，而不论它是类名、函数名还是变量名，类似 `using sp::foo(int);` 的写法是错误的  
+当 `using` 声明一个函数名时，其所在命名空间的所有同名函数都被引入当前作用域，如果因此导致命名冲突则会报错  
+`using` 指示同理，只不过是外层作用域  
+
+```C++
+namespace sp1 { int print(int); }
+namespace sp2 { double print(double); }
+using namespace sp1;
+using namespace sp2;
+long double print(long double);
+
+int main()
+{
+    // 此处三种 print 函数均可见
+    print(0); // int
+    print(3.14); // double
+}
+```
