@@ -422,3 +422,54 @@ SmallInt s1, s2;
 s1 + s2; // 使用重载版本的函数
 int i = s1 + 0; // 具有二义性，使用重载和内置版本的函数均可
 ```
+
+## 13. new 和 delete 运算符
+
+### new 和 new[] 的默认行为
+
+1. 调用 `operator new` 或 `operator new[]` 函数
+2. 分配一块足够大的、原始的、未命名的内存空间
+3. 运行相应的构造函数构造对象
+4. 返回指向对象的指针
+
+### delete 和 delete[] 的默认行为
+
+1. 调用对象的析构函数
+2. 调用 `operator delete` 或 `operator delete[]` 函数
+3. 释放空间
+
+### 标准库接口
+
+自定义的四种运算符可以定义为成员函数，也可以是非成员函数，如果未定义则使用全局作用域的标准库版本  
+如 `::new` 的表达式可指定使用标准库版本  
+
+```C++
+// 可能抛出 bad_alloc 异常的版本
+void *operator new(size_t);
+void *operator new[](size_t);
+void *operator delete(void*) noexcept;
+void *operator delete[](void*) noexcept;
+
+// 不会抛出异常的版本
+void *operator new(size_t, nothrow_t&) noexcept;
+void *operator new[](size_t, nothrow_t&) noexcept;
+void *operator delete(void*, nothrow_t&) noexcept;
+void *operator delete[](void*, nothrow_t&) noexcept;
+
+/* nothrow_t 定义在头文件 <new> 中，是一个空 struct
+ * 该文件中还定义了一个名为 nothrow 的 const nothrow_t 对象
+ * 通过该对象调用不抛异常的版本
+ */
+```
+
+重载这些运算符时，`noexcept` 声明要保持不变，返回类型保持不变，`new` 的第一个形参必须是 `size_t` 且无默认实参  
+`delete` 类似，第一个形参是指向待释放内存的指针  
+调用 `new` 时，第一个形参会被传入对象或对象数组的大小  
+重载运算符只能在全局作用域和类作用域中声明  
+在类作用域中声明时，其为隐式 `static` 成员，因为 `new` 在对象构造之前调用，`delete` 在对象销毁之后调用，且不能操作对象成员  
+
+```C++
+// new 的定位形式，不能被重载
+void *operator new(size_t, void*);
+void *operator new[](size_t, void*);
+```
