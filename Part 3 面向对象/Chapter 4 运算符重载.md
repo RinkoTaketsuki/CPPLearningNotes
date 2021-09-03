@@ -425,17 +425,17 @@ int i = s1 + 0; // 具有二义性，使用重载和内置版本的函数均可
 
 ## 13. new 和 delete 运算符
 
-### new 和 new[] 的默认行为
+### new 和 new[] 的行为
 
-1. 调用 `operator new` 或 `operator new[]` 函数
+1. 调用 `operator new` 或 `operator new[]` 函数，在该函数中：
 2. 分配一块足够大的、原始的、未命名的内存空间
 3. 运行相应的构造函数构造对象
 4. 返回指向对象的指针
 
-### delete 和 delete[] 的默认行为
+### delete 和 delete[] 的行为
 
 1. 调用对象的析构函数
-2. 调用 `operator delete` 或 `operator delete[]` 函数
+2. 调用 `operator delete` 或 `operator delete[]` 函数，在该函数中：
 3. 释放空间
 
 ### 标准库接口
@@ -463,13 +463,52 @@ void *operator delete[](void*, nothrow_t&) noexcept;
 ```
 
 重载这些运算符时，`noexcept` 声明要保持不变，返回类型保持不变，`new` 的第一个形参必须是 `size_t` 且无默认实参  
-`delete` 类似，第一个形参是指向待释放内存的指针  
+`delete` 类似，第一个形参必须是 `void*`，第一个形参是指向待释放内存的指针，可以有第二个形参（`size_t`），表示释放的空间大小  
 调用 `new` 时，第一个形参会被传入对象或对象数组的大小  
 重载运算符只能在全局作用域和类作用域中声明  
 在类作用域中声明时，其为隐式 `static` 成员，因为 `new` 在对象构造之前调用，`delete` 在对象销毁之后调用，且不能操作对象成员  
 
 ```C++
-// new 的定位形式，不能被重载
+// 通常的 operator new 和 operator delete 的定义方法
+void *operator new(size_t size)
+{
+    if (void *mem = malloc(size))
+        return mem;
+    else
+        throw bad_alloc();
+}
+
+void operator delete(void* mem) noexcept
+{
+    free(mem);
+}
+```
+
+### 定位 new 表达式
+
+```C++
+/* new 的定位形式，不能被重载
+ * 定位 new 不分配内存，只构造对象
+ * 旧版本中使用定位 new 来代替 allocator<T>::construct
+ * 与 allocator<T>::destroy 对应的操作是显式调用析构函数
+ */
 void *operator new(size_t, void*);
 void *operator new[](size_t, void*);
+
+// 使用定位 new 表达式的方法
+class A
+{
+    int mem1;
+    double mem2;
+public:
+    A() = default;
+    A(int n): mem1(n), mem2(0) {}
+};
+
+char *buf = new char[1000];
+
+A *p1 = new (buf) A;
+A *p2 = new (buf + sizeof(A)) A(42);
+A *p3 = new (buf + sizeof(A) * 2) A[3];
+A *p4 = new (buf + sizeof(A) * 5) A[4] {1, 2, 3, 4};
 ```

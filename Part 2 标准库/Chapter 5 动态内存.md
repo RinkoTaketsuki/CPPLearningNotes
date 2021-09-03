@@ -302,3 +302,12 @@ uninitialized_copy_n(b, n, b2); // 将 [b, b + n) 内的元素拷贝到迭代器
 uninitialized_fill(b, e, t); // 将 t 拷贝填充到 [b, e) 中
 uninitialized_fill_n(b, n, t); // 将 t 拷贝填充到 [b, b + n) 中
 ```
+
+## 10. malloc 和 free
+
+```C++
+// 分配给定大小的内存，若失败返回 0
+void *malloc(size_t);
+// 释放给定地址的内存，若输入 0 则不做任何事
+void free(void*);
+```
