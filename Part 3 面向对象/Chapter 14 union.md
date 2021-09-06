@@ -86,4 +86,31 @@ Token &Token::operator=(const std::string &s)
     tok = STR;
     return *this;
 }
+
+void Token::copyUnion(const Token &t)
+{
+    switch (t.tok)
+    {
+        case Token::INT:
+            ival = t.ival; break;
+        case Token::CHAR:
+            cval = t.cval; break;
+        case Token::DBL:
+            dval = t.dval; break;
+        case Token::STR:
+            new(&sval) string(t.sval); break;
+    }
+}
+
+Token &Token::operator=(const Token &t)
+{
+    if (tok == STR && t.tok != STR)
+        sval.~string();
+    if (tok == STR && t.tok == STR)
+        sval = t.sval;
+    else
+        copyUnion(t);
+    tok = t.tok;
+    return *this;
+}
 ```
