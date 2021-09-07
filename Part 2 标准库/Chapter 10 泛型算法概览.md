@@ -156,5 +156,14 @@ merge(beg1, end1, beg2, end2, dest, comp);
 ## 7. 使用前向迭代器的写算法
 
 ```C++
-
+// 交换 iter1 和 iter2 指向的元素，无返回值
+iter_swap(iter1, iter2);
+// 交换两个迭代器范围内的元素，两个范围不能有重叠，返回递增过的 beg2，即交换的元素的尾后位置
+swap_ranges(beg1, end1, beg2);
+// 替换值为 old_val 的元素为 new_val，无返回值
+replace(beg, end, old_val, new_val);
+// 替换满足 unaryPred 的元素为 new_val，无返回值
+replace_if(beg, end, old_val, new_val);
 ```
+
+## 8. 使用双向迭代器的写算法
