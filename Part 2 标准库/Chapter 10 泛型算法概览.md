@@ -167,3 +167,70 @@ replace_if(beg, end, old_val, new_val);
 ```
 
 ## 8. 使用双向迭代器的写算法
+
+```C++
+// dest 是输出序列的尾后迭代器，拷贝或移动顺序是从后向前，输出序列和输入序列的元素排列顺序相同
+// 若输入范围为空返回 dest，否则返回指向输出序列首元素的迭代器  
+copy_backward(beg, end, dest);
+move_backward(beg, end, dest);
+// 将同一序列中两个有序子序列 [beg, mid) 和 [mid, end) 合并为一个有序序列
+// 有序的定义为升序（使用默认的 < 运算符）或 comp 对应的顺序，返回 void
+inplace_merge(beg, mid, end);
+inplace_merge(beg, mid, end, comp);
+```
+
+## 9. 划分算法
+
+通常把输入序列分为两组，一组满足一元谓词，另一组不满足  
+稳定版本通常比不稳定版本效率更低且消耗内存更多  
+除 `is_partitioned` 要求输入迭代器外均要求双向迭代器  
+
+```C++
+// 若输入序列为空或所有满足条件的元素都在不满足条件的元素之前，则返回 true
+is_partitioned(beg, end, unaryPred);
+// 将输入序列中满足条件的元素拷贝到 dest1，不满足条件的元素拷贝到 dest2
+// 输入序列与两个目的序列不能重叠，返回迭代器 pair，即两个目的序列的尾后迭代器
+partition_copy(beg, end, dest1, dest2, unaryPred);
+// 输入序列必须满足 is_partitioned(beg, end, unaryPred)，
+// 返回满足条件的子序列的尾后迭代器，可能是 end
+partition_point(beg, end, unaryPred);
+// 对序列进行原地划分，返回划分后满足条件的子序列的尾后迭代器，若所有元素都不满足则返回 beg
+partition(beg, end, unaryPred);
+stable_partition(beg, end, unaryPred);
+```
+
+## 10. 排序算法
+
+均要求随机访问迭代器，默认使用 `<` 运算符比较，默认升序排序  
+稳定版本通常比不稳定版本效率更低且消耗内存更多  
+`partial_sort` 和 `nth_element` 系列函数只进行部分排序工作，效率比排序整个输入序列要高  
+除 `partial_sort_copy` 以外其他函数均无返回值  
+
+```C++
+// 对输入范围原地排序
+sort(beg, end);
+sort(beg, end, comp);
+stable_sort(beg, end);
+stable_sort(beg, end, comp);
+// 返回 bool 值，表示整个输入序列是否有序
+is_sorted(beg, end);
+is_sorted(beg, end, comp);
+// 返回从首元素开始的最长有序子序列的尾后迭代器
+is_sorted_until(beg, end);
+is_sorted_until(beg, end, comp);
+// 将输入序列的前 mid - beg 小的元素升序放在序列最前面，其他元素放在后面
+// 未排序部分的元素的相对位置不确定
+partial_sort(beg, mid, end);
+partial_sort(beg, mid, end, comp);
+// 将输入序列的前 destEnd - destBeg 小的元素升序放在 [destBeg, destEnd) 中
+// 若目的序列范围比输入序列大，则将整个输入序列的排序结果放在目的序列中
+// 返回目的序列的已排序部分的尾后迭代器
+partial_sort_copy(beg, end, destBeg, destEnd);
+partial_sort_copy(beg, end, destBeg, destEnd, comp);
+// nth 是随机访问迭代器，执行函数后，nth 指向的元素的值是整个序列排序后对应位置的值
+// 且 nth 之前的元素均小于等于 *nth，nth 之后的元素均大于等于 *nth
+nth_element(beg, nth, end);
+nth_element(beg, nth, end, comp);
+```
+
+## 11. 使用前向迭代器的重排算法

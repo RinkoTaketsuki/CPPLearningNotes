@@ -23,6 +23,82 @@ e.discard(u); // 将引擎向前推进 u（unsigned long long）步，
 
 ## 2. 随机数分布类
 
+除 `bernoulli_distribution` 外其他均是模板，接受单个内置类型参数，有的只接受浮点类型，有的只接受整型  
+接受的类型参数表示产生的随机数的结果类型，`bernoulli_distribution` 返回 `bool` 类型  
+这里的整型不包括 `bool` 和各种 `char` 类型，整型的默认参数是 `int`，浮点型的默认参数是 `double`  
+每个分布的构造函数的形参代表这种分布的参数，如果这些参数表示一个范围，均指闭区间范围，包括所有端点  
+下面列出的各种分布中 `IntT` 表示接受整型，`RealT` 表示接受浮点型
+
+```C++
+// 均匀分布
+// m 默认为 0，n 默认为 IntT 的最大值，x 默认为 0.0，y 默认为 1.0
+uniform_int_distribution<IntT> u(m, n);
+uniform_int_distribution<RealT> u(x, y);
+
+// 伯努利分布
+// p 表示返回 true 的概率，默认为 0.5
+bernoulli_distribution b(p);
+
+// 二项分布
+// t 表示抽样次数，默认为 1
+// p 表示单次正例概率，默认为 0.5
+binominal_distribution<IntT> b(t, p);
+
+// 几何分布
+// p 表示单次正例概率，默认为 0.5
+geometric_distribution<IntT> g(p);
+
+// 负二项分布：k + r 次实验中，总共成功 k 次且第 k + r 次恰好为成功
+// 根据如上描述的概率分布返回 r
+// p 表示单次正例概率，默认为 0.5
+negative_binominal_distribution<IntT> n(k, p);
+
+// 泊松分布，x 为 double 类型的均值
+poisson_distribution<IntT> p(x);
+
+// 指数分布，参数 lam 默认为 1.0
+exponential_distribution<RealT> e(lam);
+
+// Γ 分布，参数 α 和 β 均默认为 1.0
+gamma_distribution<RealT> g(a, b);
+
+// 韦伯分布，参数 λ 和 k 均默认为 1.0
+weibull_distribution<RealT> w(a, b);
+
+// 极值分布，参数 a 默认为 0.0，参数 b 默认为 1.0
+extreme_value_distribution<RealT> e(a, b);
+
+// 正态分布，均值默认为 0.0，标准差默认为 1.0
+normal_distribution<RealT> n(m, s);
+
+// 对数正态分布，均值默认为 0.0，标准差默认为 1.0
+lognormal_distribution<RealT> n(m, s);
+
+// 卡方分布，自由度默认为 1.0
+chi_squared_distribution<RealT> c(x);
+
+// 柯西分布，位置参数默认为 0.0，尺度参数默认为 1.0
+cauchy_distribution<RealT> c(a, b);
+
+// F 分布，自由度默认均为 1.0
+fisher_f_distribution<RealT> f(m, n);
+
+// t 分布，自由度默认为 1.0
+student_t_distribution<RealT> s(n);
+
+// 离散分布，i 和 j 表示权重的迭代器范围，il 表示权重列表
+// 返回 n 的概率为下标为 n 的元素的权重除以总权重
+discrete_distribution<IntT> d(i, j);
+discrete_distribution<IntT> d{il};
+
+// 分段常数分布，迭代器范围 [b, e) 表示分段参数 b，迭代器范围 [w, w + (e - b - 1)) 表示权重参数 w
+// x 落在 [b[i], b[i + 1]) 区间内的概率为该段的权重除以加权区间长度和，x 在区间内为均匀分布
+piecewise_constant_distribution<RealT> pc(b, e, w);
+
+// 分段线性分布，与上一个分布的区别是区间内概率密度函数为线性，左端点值为 w[i]，右端点值为 w[i + 1]
+piecewise_linear_distribution<RealT> pl(b, e, w);
+```
+
 ```C++
 // 使用例
 
