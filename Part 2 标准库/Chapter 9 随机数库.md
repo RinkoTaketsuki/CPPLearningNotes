@@ -9,10 +9,28 @@
 标准库有多个随机数引擎类，编译器会指定一个作为 `default_random_engine` 类  
 
 ```C++
+// 随机数引擎类
+
+// 线性同余法
+minstd_rand0; minstd_rand;
+// 无符号梅森旋转生成器
+mt19937; mt19937_64;
+// 无符号借位减法生成器
+ranlux24_base; ranlux48_base;
+```
+
+```C++
+// 引擎适配器类
+ranlux24; ranlux48; knuth_b;
+
+// 标准库未提供实例的引擎适配器模板
+template<typename _RandomNumberEngine, size_t __w, typename _UIntType>
+    class independent_bits_engine;
+```
+
+```C++
 // 假设引擎类名为 Engine
-
 Engine::result_type; // 返回的随机数类型
-
 Engine e; // 默认构造函数，使用默认种子
 Engine e(s); // 使用整型值 s（Engine::result_type） 作为种子
 e.seed(s); // 使用种子 s 重置状态，无返回值，s 默认为 1
@@ -33,7 +51,7 @@ e.discard(u); // 将引擎向前推进 u（unsigned long long）步，
 // 均匀分布
 // m 默认为 0，n 默认为 IntT 的最大值，x 默认为 0.0，y 默认为 1.0
 uniform_int_distribution<IntT> u(m, n);
-uniform_int_distribution<RealT> u(x, y);
+uniform_real_distribution<RealT> u(x, y);
 
 // 伯努利分布
 // p 表示返回 true 的概率，默认为 0.5
@@ -118,7 +136,7 @@ d.reset(); // 重置状态
 
 ## 3. 常见问题
 
-### 生成的随机数总是一样的
+### 为何生成的随机数总是一样的
 
 ```C++
 // 错误示例，每次都返回相同序列，因为每次调用该函数都是从默认种子开始
@@ -136,19 +154,6 @@ vector<unsigned> randVec()
 
 可以将 `time(nullptr)` 设置为种子，但这样每一秒内生成的随机数序列都是一样的  
 
-### 生成随机浮点数
-
-```C++
-uniform_real_distribution<double> u(0, 1);
-```
-
-### 使用分布类的默认结果类型
+### 如何使用分布类的默认结果类型
 
 将模板实参设为空的尖括号即可  
-
-### 使用非均匀分布类
-
-```C++
-normal_distribution<> n(4, 1.5); // 正太分布，均值 4，标准差 1.5
-bernoulli_distribution b(0.6); // 伯努利分布，非模板类，返回 bool，true 的概率为 0.6，默认为 0.5
-```
