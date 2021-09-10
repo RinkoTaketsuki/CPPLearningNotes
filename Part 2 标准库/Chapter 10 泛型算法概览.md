@@ -234,3 +234,167 @@ nth_element(beg, nth, end, comp);
 ```
 
 ## 11. 使用前向迭代器的重排算法
+
+拷贝版本的目的序列迭代器要求输出迭代器  
+
+```C++
+// 把等于 val 或满足 unaryPread 的元素放在前面，前面的序列的元素的相对位置不变
+// 返回前面的序列的尾后迭代器
+remove(beg, end, val);
+remove_if(beg, end, unaryPred);
+// 把等于 val 或满足 unaryPread 的元素放在目的序列中，前面的序列的元素的相对位置不变
+remove_copy(beg, end, dest, val);
+remove_copy_if(beg, end, dest, unaryPred);
+// 把相邻的重复元素排在后面，前面的序列的元素的相对位置不变
+// 返回前面的序列的尾后迭代器
+unique(beg, end);
+unique(beg, end, binaryPred);
+// 把相邻的重复元素排在后面，把前面的序列拷贝给 dest，前面的序列的元素的相对位置不变
+unique_copy(beg, end, dest);
+unique_copy(beg, end, dest, binaryPred);
+// 把 [mid, end) 放在前面，把 [beg, mid) 放在后面
+// 返回指向原来的 beg 指向的元素的迭代器
+rotate(beg, mid, end);
+// 把 [mid, end) 放在 dest 前面，把 [beg, mid) 放在 dest 后面
+// 返回目标序列的指向第二次拷贝的首元素的迭代器
+rotate_copy(beg, mid, end, dest);
+```
+
+## 12. 使用双向迭代器的重排算法
+
+拷贝版本的目的序列迭代器要求输出迭代器  
+
+```C++
+// 翻转元素，无返回值
+reverse(beg, end);
+// 翻转元素，返回目的序列的尾后迭代器
+reverse_copy(beg, end, dest);
+```
+
+## 13. 使用随机访问迭代器的重排算法
+
+均返回 void  
+
+```C++
+// 打乱元素
+random_shuffle(beg, end);
+// 打乱元素，rand 是可调用对象，其接受一个正整数输入，返回 0 到该值之间均匀分布的随机数
+random_shuffle(beg, end, rand);
+// 打乱元素，UniformRand 是均匀分布随机数引擎
+shuffle(beg, end, UniformRand);
+```
+
+## 14. 排列算法
+
+> 排列即数学中排列的定义，排列的顺序是指字典顺序  
+> 例：“ABC” 的 6 个排列按照顺序写出  
+> “ABC”，“ACB”，“BAC”，“BCA”，“CAB”，“CBA”  
+
+排列算法假定输入序列都是无重复值的，均要求双向迭代器  
+
+```C++
+// 若第二个输入序列的某个排列等于第一个输入序列，则返回 true
+// 默认使用 == 运算符
+is_permutation(beg1, end1, beg2);
+is_permutation(beg1, end1, beg2, binaryPred);
+// 将输入序列重排为下一个排列，返回 true
+// 如果是最后一个排列则重排为第一个排列，返回 false
+// 默认使用 < 运算符
+next_permutation(beg, end);
+next_permutation(beg, end, comp);
+// 类似上一个函数，但重排为上一个排列
+prev_permutation(beg, end);
+prev_permutation(beg, end, comp);
+```
+
+## 15. 有序序列的集合算法
+
+注意只能处理有序序列，均默认使用 `<` 运算符  
+输入序列要求输入迭代器，目的序列要求输出迭代器，有目的序列的均返回目的序列的尾后迭代器  
+
+```C++
+// 包含：若第一个序列包括第二个序列中的所有元素，则返回 true，否则返回 false
+includes(beg1, end1, beg2, end2);
+includes(beg1, end1, beg2, end2, comp);
+// 并：将两个有序序列合并成一个有序序列并去重，结果写入目的序列
+set_union(beg1, end1, beg2, end2, dest);
+set_union(beg1, end1, beg2, end2, dest, comp);
+// 交：将两个有序序列的公共有序序列写入目的序列
+set_intersection(beg1, end1, beg2, end2, dest);
+set_intersection(beg1, end1, beg2, end2, dest, comp);
+// 差：将在第一个有序序列中而不在第二个有序序列中的元素组成的有序序列写入目的序列
+set_difference(beg1, end1, beg2, end2, dest);
+set_difference(beg1, end1, beg2, end2, dest, comp);
+// 对称差：将只在其中一个序列中出现的元素组成的有序序列写入目的序列
+set_symmetric_difference(beg1, end1, beg2, end2, dest);
+set_symmetric_difference(beg1, end1, beg2, end2, dest, comp);
+```
+
+## 16. 最值算法
+
+默认使用 `<` 运算符  
+接受序列的要求输入迭代器  
+
+```C++
+// 返回两个对象的最值
+min(val1, val2);
+min(val1, val2, comp);
+max(val1, val2);
+max(val1, val2, comp);
+// 返回花括号列表的最值
+min(il);
+min(il, comp);
+max(il);
+max(il, comp);
+// 返回最值 pair：{min, max}
+minmax(val1, val2);
+minmax(val1, val2, comp);
+minmax(il);
+minmax(il, comp);
+// 处理迭代器范围输入的版本，返回指向对应元素的迭代器或迭代器 pair
+min_element(beg, end);
+min_element(beg, end, comp);
+max_element(beg, end);
+max_element(beg, end, comp);
+minmax_element(beg, end);
+minmax_element(beg, end, comp);
+```
+
+## 17. 字典序比较算法
+
+默认使用 `<` 运算符，要求输入迭代器，返回 `bool`
+
+> 字典序比较：假设两个序列名为 a 和 b  
+> 如果两个序列的 [0, i) 范围内的元素都相等，但 a[i] < b[i]，则 a < b  
+> 假定 a 序列更短，两个序列的 [0, a 的长度) 范围内的元素都相等，则 a < b  
+
+```C++
+// 如果字典序小于则返回 true，大于等于则返回 false
+lexicographical_compare(beg1, end1, beg2, end2);
+lexicographical_compare(beg1, end1, beg2, end2, comp);
+```
+
+## 18. 数值算法
+
+定义在 `<numeric>` 中，输入序列要求输入迭代器，目的序列要求输出迭代器  
+
+> 部分和：s[i] = accumulate(a.cbegin(), a.cbegin() + i + 1, 0)  
+> 相邻差：d[i] = a[i] - a[i - 1]，d[0] = a[0]  
+
+```C++
+// 返回输入序列求和 + init，默认使用 + 运算符
+accumulate(beg, end, init);
+accumulate(beg, end, init, binaryOp);
+// 返回输入序列内积 + init，默认使用 + 和 * 运算符
+// binaryOp1 代替 +，binaryOp2 代替 *
+inner_product(beg, end, beg2, init);
+inner_product(beg, end, beg2, init, binaryOp1, binaryOp2);
+// 将输入序列的部分和写入 dest，默认使用 + 运算符，返回目的序列的尾后迭代器
+partial_sum(beg, end, init);
+partial_sum(beg, end, init, binaryOp);
+// 将输入序列的相邻差写入 dest，默认使用 - 运算符，返回目的序列的尾后迭代器
+adjacent_difference(beg, end, init);
+adjacent_difference(beg, end, init, binaryOp);
+// beg[i] = val++，无返回值
+iota(beg, end, val);
+```
