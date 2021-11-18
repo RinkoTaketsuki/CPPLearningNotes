@@ -70,7 +70,9 @@
         }
         char &operator[](size_t i)
         {
-            return const_cast<char &>(const_cast<const A &>(*this)[i]);
+            // 不要使用 const_cast 修改 this
+            // 也正因此，不能使用非 const 成员函数实现 const 的版本
+            return const_cast<char &>(static_cast<const A &>(*this)[i]);
         }
     };
     ```
