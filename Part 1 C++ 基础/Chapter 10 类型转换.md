@@ -46,16 +46,34 @@
 
 ## 6. static_cast
 
-1. 不能删除底层const，会报错
+1. 不能删除底层 `const`，会报错
 2. 可以用于窄化，不会警告
-3. 可以用于将void*强转为指定的指针类型
+3. 可以用于将 `void*` 强转为指定的指针类型
 4. 不支持隐式转换不支持的指针类型转化
 
 ## 7. const_cast
 
-1. 只有这种cast能用来删除底层const，但之后再写入值会出现问题
+1. 只有这种 cast 能用来删除底层 `const`，但之后再写入值会出现问题
 2. 不能处理非常量类型
 3. 一般只有函数重载时要用，其他时候不会有使用的必要
+
+    ```C++
+    // 正确用法举例
+    class A
+    {
+        char *str = "";
+    
+    public:
+        const char &operator[](size_t i) const
+        {
+            return str[i];
+        }
+        char &operator[](size_t i)
+        {
+            return const_cast<char &>(const_cast<const A &>(*this)[i]);
+        }
+    };
+    ```
 
 ## 8. reinterpret_cast
 
