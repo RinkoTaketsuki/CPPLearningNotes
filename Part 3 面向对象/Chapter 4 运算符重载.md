@@ -428,15 +428,14 @@ int i = s1 + 0; // 具有二义性，使用重载和内置版本的函数均可
 ### new 和 new[] 的行为
 
 1. 调用 `operator new` 或 `operator new[]` 函数，分配一块足够大的、原始的、未命名的内存空间  
-2. 运行相应的构造函数构造对象  
+2. 调用相应的构造函数构造对象，若为 new[] 运算符则会调用多次构造函数  
 3. 返回指向对象的指针  
 4. 第一步可能抛出 `bad_alloc` 异常，此时构造函数不会执行  
 
 ### delete 和 delete[] 的行为
 
-1. 调用对象的析构函数
-2. 调用 `operator delete` 或 `operator delete[]` 函数，在该函数中：
-3. 释放空间
+1. 调用对象的析构函数，若为 delete[] 运算符则会调用多次析构函数，析构顺序与构造顺序相反  
+2. 调用 `operator delete` 或 `operator delete[]` 函数，在该函数中释放空间
 
 ### 标准库接口
 
@@ -484,14 +483,15 @@ void operator delete(void* mem) noexcept
 }
 ```
 
-### 定位 new 表达式
+### 定位 new 的行为
+
+可以作为显式调用构造函数的一种方法  
+
+1. 调用 `operator new` 或 `operator new[]` 函数（有指针形参的版本），标准库版本（全局作用域）的该函数仅返回输入的指针，别的什么都不做  
+2. 调用相应的构造函数构造对象，若为定位 new[] 运算符则会调用多次构造函数  
+3. 返回指向对象的指针  
 
 ```C++
-/* new 的定位形式，不能被重载
- * 定位 new 不分配内存，只构造对象
- * 旧版本中使用定位 new 来代替 allocator<T>::construct
- * 与 allocator<T>::destroy 对应的操作是显式调用析构函数
- */
 void *operator new(size_t, void*);
 void *operator new[](size_t, void*);
 
