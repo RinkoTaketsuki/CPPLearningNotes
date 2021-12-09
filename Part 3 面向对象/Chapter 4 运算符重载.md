@@ -427,10 +427,10 @@ int i = s1 + 0; // 具有二义性，使用重载和内置版本的函数均可
 
 ### new 和 new[] 的行为
 
-1. 调用 `operator new` 或 `operator new[]` 函数，在该函数中：
-2. 分配一块足够大的、原始的、未命名的内存空间
-3. 运行相应的构造函数构造对象
-4. 返回指向对象的指针
+1. 调用 `operator new` 或 `operator new[]` 函数，分配一块足够大的、原始的、未命名的内存空间  
+2. 运行相应的构造函数构造对象  
+3. 返回指向对象的指针  
+4. 第一步可能抛出 `bad_alloc` 异常，此时构造函数不会执行  
 
 ### delete 和 delete[] 的行为
 
@@ -511,4 +511,21 @@ A *p1 = new (buf) A;
 A *p2 = new (buf + sizeof(A)) A(42);
 A *p3 = new (buf + sizeof(A) * 2) A[3];
 A *p4 = new (buf + sizeof(A) * 5) A[4] {1, 2, 3, 4};
+```
+
+### new 和 delete 表达式的行为模拟
+
+```C++
+// A *p = new A(/*args*/);
+A *p;
+try
+{
+    p = static_cast<A*>(::operator new(sizeof(A)));
+    new(p) A(/*args*/);
+}
+catch (std::bad_alloc) {}
+
+// delete *p;
+p->~A();
+::operator delete(p);
 ```
