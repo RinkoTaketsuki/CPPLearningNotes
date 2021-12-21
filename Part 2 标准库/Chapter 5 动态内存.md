@@ -311,3 +311,23 @@ void *malloc(size_t);
 // 释放给定地址的内存，若输入 0 则不做任何事
 void free(void*);
 ```
+
+### malloc 实现
+
+```C++
+// 以 32 位系统的 vc6 为例，其中 debug_header 和 pad 的大小不确定
+// size 表示 malloc 函数的输入值，data 为 malloc 的返回值
+// 非 debug 模式下没有 debug_header, temp1 和 temp2
+struct MemBlock
+{
+    // 以下所有元素的大小之和固定为 16 的倍数
+    // 通过调整 pad 的大小来实现
+    unsigned char cookie1; // 值为 MemBlock 大小 + 1
+    unsigned char debug_header[???];
+    uint32_t temp1 = 0xfdfdfdfd;
+    unsigned char data[size] = {0xcd};
+    uint32_t temp2 = 0xfdfdfdfd;
+    unsigned char pad[???] = {0x0};
+    unsigned char cookie2;
+}
+```

@@ -442,6 +442,10 @@ int i = s1 + 0; // 具有二义性，使用重载和内置版本的函数均可
 `operator new` 等函数可以定义为成员函数，也可以是非成员函数，如果未定义则使用全局作用域的标准库版本  
 在 `new` 运算符前面加 `::` 符号可以指明让 `new` 使用标准库版本的 `operator new` 函数，其他三种运算符也类似  
 
+一些较老的编译器对 `new` 行为失败的处理是返回空指针，而不是抛出 `bad_alloc` 异常  
+如果需要显式表明令 `new` 以旧的方式处理分配失败的情况，则可以写成 `new(std::nothrow)` 的形式  
+此时 `new` 会默认调用不抛异常版本的 `operator new` 函数  
+
 ```C++
 // 可能抛出 bad_alloc 异常的版本
 void *operator new(size_t);
@@ -484,6 +488,8 @@ void operator delete(void* mem) noexcept
 }
 ```
 
+这四种 `operator` 函数可以在类内被设置为 `=delete`，此时尝试使用对应的四种运算符时会失败  
+
 ### 定位 new 的行为
 
 可以作为显式调用构造函数的一种方法  
@@ -514,19 +520,37 @@ A *p3 = new (buf + sizeof(A) * 2) A[3];
 A *p4 = new (buf + sizeof(A) * 5) A[4] {1, 2, 3, 4};
 ```
 
-### new 和 delete 表达式的行为模拟
+定位 new 的行为可以通过类内重载来更改，但要注意的是第一个参数类型必须是 size_t  
 
 ```C++
-// A *p = new A(/*args*/);
-A *p;
-try
+class A
 {
-    p = static_cast<A*>(::operator new(sizeof(A)));
-    new(p) A(/*args*/);
-}
-catch (std::bad_alloc) {}
+    int mem1;
+    double mem2;
+public:
+    A() = default;
+    A(int n): mem1(n), mem2(0) {}
+    // 打印输入字符串 x 次，之后分配空间
+    void *operator new(size_t n, string str, int x)
+    {
+        for (int i = 0; i < x; ++i)
+        {
+            cout << str << endl;
+        }
+        return malloc(n);
+    }
+};
 
-// delete *p;
-p->~A();
-::operator delete(p);
+// 调用方法
+int main()
+{
+    // 先打印字符串，然后分配空间，然后调用构造函数
+    A *p = new ("hello", 2) A(10);
+    return 0;
+}
 ```
+
+### new handler
+
+在 `new` 运算符抛出 `bad_alloc` 异常之前，会不断地调用 `new_handler`，即一个类型为 `using new_handler = void(*)` 类型的函数，直到能正常分配为止  
+该函数可以使用 `new_handler set_new_handler(new_handler p) noexcept` 函数来登录  
