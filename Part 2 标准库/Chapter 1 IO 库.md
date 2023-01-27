@@ -1,57 +1,230 @@
 # Chapter 1 IO 库
 
-## 1. IO 类
+## 1. 源码速览
 
-`<iostream>`
+下面给出 IO 库一些重要的类、函数和对象的相关源码，编译器为 g++ in MinGW-w64 9.0
 
-`istream wistream` 从流读取数据  
-`ostream wostream` 从流写入数据  
-`iostream wiostream` 从流读写数据  
+### 1.1 `<bits/basic_ios.h>`
 
-`<fstream>`
+```cpp
+template<typename _CharT, typename _Traits>
+class basic_ios : public ios_base {
+    // defination
+};
+```
 
-`ifstream wifstream` 从文件读取数据  
-`ofstream wofstream` 从文件写入数据  
-`iofstream wiofstream` 从文件读写数据  
+### 1.2 `<ostream>`
 
-`<sstream>`
+```cpp
+template <typename _CharT, typename _Traits>
+class basic_ostream : virtual public basic_ios<_CharT, _Traits> {
+    // defination
+};
 
-`istringstream wistringstream` 从string读取数据  
-`ostringstream wostringstream` 从string写入数据  
-`iostringstream wiostringstream` 从string读写数据  
+// Write a newline and flush the stream.
+template <typename _CharT, typename _Traits>
+inline basic_ostream<_CharT, _Traits> &endl(
+    basic_ostream<_CharT, _Traits>& __os) {
+    return flush(__os.put(__os.widen('\n')));
+}
 
-> 带 w 前缀的类表示其处理的是宽字符  
-> 带 f 和 string 的类都继承自相应的不带 f 和 string 的类  
-> 由继承关系可得，相应的不带 f 和 string 类型的 IO 类引用和指针可以指向带 f 和 string 类型的对象  
-> `istream &getline(istream&, string&)` 从输入流读取一行数据，返回 string 对象
+// Write a null character into the output sequence.
+template <typename _CharT, typename _Traits>
+inline basic_ostream<_CharT, _Traits> &ends(
+    basic_ostream<_CharT, _Traits>& __os) { 
+    return __os.put(_CharT());
+}
 
-## 2. IO 对象不能拷贝或赋值
+// Flushes the output stream.
+template <typename _CharT, typename _Traits>
+inline basic_ostream<_CharT, _Traits> &flush(
+    basic_ostream<_CharT, _Traits>& __os) {
+    return __os.flush();
+}
 
-由于不能拷贝 IO 对象，函数的形参和返回类型不能设为 IO 类型  
-通常以引用方式定义 IO 类型的形参和返回类型  
-但由于读写 IO 对象会导致其发生改变，不能设置为 `const` 引用类型  
+/**
+ * 本文件中还有关于成员及非成员函数模板 operator<<() 的相关定义，使 basic_ostream
+ * 支持各种内置类型和各种字符串类型的输出，以及上面三个操作符（manipulator）。
+ * 这些函数均返回输入的流对象的左值引用。
+ */
+```
+
+### 1.3 `<istream>`
+
+```cpp
+template <typename _CharT, typename _Traits>
+class basic_istream : virtual public basic_ios<_CharT, _Traits> {
+    // defination
+};
+
+template <typename _CharT, typename _Traits>
+class basic_iostream : 
+    public basic_istream<_CharT, _Traits>,
+    public basic_ostream<_CharT, _Traits> {
+    // defination
+};
+
+// Skip leading whitespace.
+// The defination is in "bits/istream.tcc"
+template <typename _CharT, typename _Traits>
+basic_istream<_CharT, _Traits> &ws(basic_istream<_CharT, _Traits> &__is);
+
+/**
+ * 本文件中还有关于成员及非成员函数模板 operator>>() 的相关定义，使 basic_istream
+ * 支持各种内置类型和各种字符串类型的输入，以及上面的操作符（manipulator）。
+ * 这些函数均返回输入的流对象的左值引用。
+ */
+```
+
+### 1.4 `<sstream>`
+
+```cpp
+template <typename _CharT, typename _Traits, typename _Alloc>
+class basic_istringstream : public basic_istream<_CharT, _Traits> {
+    // defination
+};
+
+template <typename _CharT, typename _Traits, typename _Alloc>
+class basic_ostringstream : public basic_ostream<_CharT, _Traits> {
+    // defination
+};
+
+template <typename _CharT, typename _Traits, typename _Alloc>
+class basic_stringstream : public basic_iostream<_CharT, _Traits> {
+    // defination
+};
+```
+
+### 1.5 `<fstream>`
+
+```cpp
+template<typename _CharT, typename _Traits>
+class basic_ifstream : public basic_istream<_CharT, _Traits> {
+    // defination
+};
+
+template<typename _CharT, typename _Traits>
+class basic_ofstream : public basic_ostream<_CharT,_Traits> {
+    // defination
+};
+
+template<typename _CharT, typename _Traits>
+class basic_fstream : public basic_iostream<_CharT, _Traits> {
+    // defination
+};
+```
+
+### 1.6 `<iosfwd>`
+
+```cpp
+class ios_base;
+
+template <typename _CharT, typename _Traits = char_traits<_CharT> >
+class basic_ios;
+
+template <typename _CharT, typename _Traits = char_traits<_CharT> >
+class basic_istream;
+
+template <typename _CharT, typename _Traits = char_traits<_CharT> >
+class basic_ostream;
+
+template <typename _CharT, typename _Traits = char_traits<_CharT> >
+class basic_iostream;
+
+template <typename _CharT, typename _Traits = char_traits<_CharT>,
+    typename _Alloc = allocator<_CharT> >
+class basic_istringstream;
+
+template <typename _CharT, typename _Traits = char_traits<_CharT>,
+    typename _Alloc = allocator<_CharT> >
+class basic_ostringstream;
+
+template <typename _CharT, typename _Traits = char_traits<_CharT>,
+    typename _Alloc = allocator<_CharT> >
+class basic_stringstream;
+
+template <typename _CharT, typename _Traits = char_traits<_CharT> >
+class basic_ifstream;
+
+template <typename _CharT, typename _Traits = char_traits<_CharT> >
+class basic_ofstream;
+
+template <typename _CharT, typename _Traits = char_traits<_CharT> >
+class basic_fstream;
+
+typedef basic_istream<char> istream;
+typedef basic_ostream<char> ostream;
+typedef basic_iostream<char> iostream;
+
+typedef basic_ifstream<char> ifstream;
+typedef basic_ofstream<char> ofstream;
+typedef basic_fstream<char> fstream;
+
+typedef basic_istringstream<char> istringstream;
+typedef basic_ostringstream<char> ostringstream;
+typedef basic_stringstream<char> stringstream;
+
+typedef basic_istream<wchar_t> wistream;
+typedef basic_ostream<wchar_t> wostream;
+typedef basic_iostream<wchar_t> wiostream;
+
+typedef basic_istringstream<wchar_t> wistringstream;
+typedef basic_ostringstream<wchar_t> wostringstream;
+typedef basic_stringstream<wchar_t> wstringstream;
+
+typedef basic_ifstream<wchar_t> wifstream;
+typedef basic_ofstream<wchar_t> wofstream;
+typedef basic_fstream<wchar_t> wfstream;
+```
+
+### 1.7 `<iostream>`
+
+```cpp
+extern istream cin;     // Linked to standard input
+extern ostream cout;    // Linked to standard output
+extern ostream cerr;    // Linked to standard error (unbuffered)
+extern ostream clog;    // Linked to standard error (buffered)
+
+extern wistream wcin;   // Linked to standard input
+extern wostream wcout;  // Linked to standard output
+extern wostream wcerr;  // Linked to standard error (unbuffered)
+extern wostream wclog;  // Linked to standard error (buffered)
+```
+
+## 2. 注意事项
+
+> 约定：IO 类型为上述后缀为 `stream` 的诸类型（包括类模板），IO 对象为 IO 类型的对象。
+
+IO 类型没有拷贝构造函数和拷贝赋值函数，因此函数的形参和返回类型不能设为 IO 类型。  
+通常以左值或右值引用方式定义 IO 类型的形参和返回类型。  
+由于读写 IO 对象会导致其发生改变，不能使用 `const` 修饰 IO 类型及其引用。  
 
 ## 3. 条件状态
 
-`std::ios_base::iostate` 条件状态类，包含如下的几个条件状态：  
-`static const std::ios_base::iostate badbit` 流已崩溃  
-`static const std::ios_base::iostate failbit` IO 操作失败  
-`static const std::ios_base::iostate eofbit` 流到达文件结束  
-`static const std::ios_base::iostate goodbit` 流未处于错误状态，该位为0代表未发生错误
-  
-设 `s` 为一个 IO 对象：  
-`s.eof()` 返回 `bool` 类型，若 `eofbit` 置位，则返回 `true`  
-`s.fail()` 返回 `bool` 类型，若 `failbit` 或 `badbit` 置位，则返回 `true`  
-`s.bad()` 返回 `bool` 类型，若 `badbit` 置位，则返回 `true`  
-`s.good()` 返回 `bool` 类型，若三个错误比特均为0，则返回 `true`  
-`s.clear()` 无返回值，将所有状态位复位  
-`s.clear(flags)` `flags` 为 `iostate` 类型，将指定的状态位复位  
-`s.setstate(flags)` `flags` 为 `iostate` 类型，将指定的状态位置位  
-`s.rdstate()` 返回 `iostate` 类型，返回当前的条件状态  
-  
-实际读取的内容无法存入给定的变量时，`failbit` 会被置位  
-到达文件结束位置时，`failbit` 和 `eofbit` 均被置位  
-IO 对象转换为 `bool` 类型时，相当于 `!s.fail()`  
+`std::ios_base` 中有若干常静态成员表示条件状态的状态位，这些状态的类型均为枚举类型 `std::ios_base::iostate`  
+
+|成员名称|含义|初始值|
+|:-|:-|:-|
+|`std::ios_base::badbit`|流已崩溃|`1 << 0`
+|`std::ios_base::eofbit`|流到达 EOF|`1 << 1`
+|`std::ios_base::failbit`|IO 操作失败|`1 << 2`
+|`std::ios_base::goodbit`|流未处于错误状态，该位为 0 代表未发生错误|`0`
+
+设 `s` 为一个 IO 对象，`stat` 表示 `s.rdstate()`，该函数返回 `s` 的当前状态（`std::ios_base::iostate` 类型）。下面的表格省略了命名空间限定符：  
+
+|成员函数|功能|
+|:-|:-|
+|`s.eof()`|返回 `bool` 类型，表示 `stat & eofbit`  
+|`s.fail()`|返回 `bool` 类型，表示 `stat & (badbit \| failbit)`  
+|`s.bad()`|返回 `bool` 类型，表示 `stat & badbit`  
+|`s.good()`|返回 `bool` 类型，表示 `0 == stat`  
+|`s.clear()`|无返回值，设置当前状态为 0  
+|`s.clear(flags)`|`flags` 为 `iostate` 类型，将当前状态直接设定为 `flags`  
+|`s.setstate(flags)`|`flags` 为 `iostate` 类型，令当前状态 `\|= flags`  
+
+通常来讲，实际读取的内容无法存入给定的变量时，`failbit` 会被置位，到达文件结束位置时，`failbit` 和 `eofbit` 均被置位。  
+
+IO 对象转换为 `bool` 类型相当于 `!s.fail()`  
   
 用法举例：  
 
@@ -60,50 +233,48 @@ IO 对象转换为 `bool` 类型时，相当于 `!s.fail()`
 cin.clear(cin.rdstate() & ~cin.failbit & ~cin.badbit)
 
 auto old_state = cin.rdstate(); // 保存 cin 当前状态
-cin.clear(); // 清除 cin 当前状态
+cin.clear();                    // 清除 cin 当前状态
+
 /* 此处操作 cin */
+
 cin.setstate(old_state); // 将 cin 置为原本的状态
 
 char word;
-// 读取流直到EOF
-while (cin >> word)
-{
+// 读取流直到 EOF
+while (cin >> word) {
     /* 此处处理 word */
 }
 ```
 
 ## 4. 输出缓冲区
 
-操作系统会将多个输出操作组合为一个单独的设备写操作以提升性能，故通常输出内容会被暂存在缓冲区中  
-缓冲刷新，即缓冲区的内容被真正地写入设备或文件  
-导致缓冲刷新的原因有：  
+操作系统会将多个输出操作组合为一个单独的设备写操作以提升性能，故通常输出内容会被暂存在缓冲区中。缓冲刷新即缓冲区的内容被真正地写入设备或文件。  
 
-- 程序正常结束，即执行 `main` 函数的 `return` 操作
+### 4.1 缓冲刷新的原因
+
+- 程序正常结束
 - 缓冲区满
 - 使用 `endl` 等操纵符显式刷新缓冲区
-- 对流设置 `unitbuf`，使得每次输出操作都会刷新缓冲区，`cerr` 默认此设置
-- 流A关联到流B时，读写流A会导致流B的缓冲区被刷新（如 `cin` 和 `cerr` 均关联到 `cout`）
+- 对流设置 `unitbuf`，使得每次输出操作都会刷新缓冲区，`cerr` 默认有此设置
+- 流 A 关联到流 B 时，读写流 A 会导致流 B 的缓冲区被刷新（如 `cin` 和 `cerr` 均关联到 `cout`）
 
-须注意程序崩溃时缓冲区不会被刷新，调试程序时要注意
+须注意程序崩溃时缓冲区不会被刷新，调试程序时要注意。
 
-### endl，flush 和 ends
+### 4.2 unitbuf 和 nounitbuf 操作符
 
-向流输出这三个操纵符均可刷新缓冲区，`flush` 不输出额外内容，`endl` 额外输出换行符，`ends` 额外输出 `\0`  
-先输出字符，再刷新缓冲区  
+这两个操作符为 `std::ios_base::fmtflags` 枚举类型，向流输出这两个操作符以设置流的刷新属性
 
-### unitbuf 和 nounitbuf
+### 4.3 流关联成员函数 `std::basic_ios<_CharT, _Traits>::tie()`
 
-向流输出这两个操作符以设置流的刷新属性
+无参数版本：如果 `this` 关联到某输出流，则返回指向这个输出流的指针，否则返回空指针。  
 
-### 流关联函数 tie
+带参数版本：接受一个 `std::basic_ostream<_CharT, _Traits>` 指针，将当前对象关联到其指向的输出流，若输入空指针则使当前流不再关联其他输出流。返回指向原来所绑定的输出流的指针（或为空）。  
 
-无参数版本：如果当前对象关联到某输出流，则返回指向这个输出流的指针，否则返回空指针  
-带参数版本：接受一个 `ostream` 指针，将当前对象关联到其指向的输出流，若输入空指针则使当前流不再关联其他输出流  
-每个流只能关联到一个输出流，但一个输出流可以被多个流关联
+每个流只能关联到一个输出流，但一个输出流可以被多个流关联。
 
 ## 5. 文件流
 
-### 文件流的特有操作
+### 5.1 文件流的特有操作举例
 
 ```C++
 fstream f; // 未绑定的默认文件流
@@ -117,42 +288,43 @@ f.close(); // 关闭文件，无返回值
 f.is_open(); // 返回 bool 类型，确定 f 绑定的文件是否成功打开且未关闭
 ```
 
-创建文件流对象时，若提供文件名，则构造函数会调用 `open` 函数  
-`open` 函数打开文件失败时，会将 `failbit` 置位  
-`fstream` 转换为 `bool` 相当于调用 `is_open` 函数  
-试图打开已经被打开的文件会导致 `open` 失败，此时需先关闭文件再重新打开文件  
-当 `fstream` 对象被销毁时，`close` 函数会自动被调用
+创建文件流对象时，若提供文件名，则构造函数会调用 `open` 函数。`open` 函数打开文件失败时（通常是因为没有 `close` 就 `open` 新的文件），会将 `failbit` 置位。  
+
+文件流对象转换为 `bool` 相当于调用 `is_open` 函数。  
+
+当文件流对象被销毁时，`close` 函数会自动被调用，如下方代码所示：
 
 ```C++
 string fileNames[10];
-for (size_t i = 0; i < 10; ++i)
-{
+for (size_t i = 0; i < 10; ++i) {
     fstream f(fileNames[i]);
-    if (f)
-    {
+    if (f) {
         /* 处理文件 */
     }
-    else
-    {
-        cerr << "Could not open: " + fileNames[i];
+    else {
+        cerr << "Could not open: " + fileNames[i] + '\n';
     }
     // 每步循环都会销毁 f，无须显式调用 close 函数
 }
 ```
 
-## 6. 文件模式
+### 5.2 打开模式
 
-`in` 读  
-`out` 写  
-`app` 每次写前定位到文件末尾
-`ate` 打开文件后定位到文件末尾
-`trunc` 截断文件
-`binary` 二进制 IO
+文件流的打开模式均为 `std::ios_base::openmode` 枚举类型，均为 `std::ios_base` 的常静态成员。
 
-- 只能对 `ofstream` 和 `fstream` 设置 `in`  
-- 只能对 `ofstream` 和 `fstream` 设置 `out`  
-- 只能对 `out` 模式的流设置 `trunc`  
-- 只能对非 `trunc` 模式的流设置 `app`  
+|名称|值|含义
+|:-|:-|:-|
+|`std::ios_base::app`|`1 << 0`|每次写前定位到文件末尾
+|`std::ios_base::ate`|`1 << 1`|打开文件后定位到文件末尾
+|`std::ios_base::binary`|`1 << 2`|二进制文件模式，若不设置该模式则表示文本文件模式
+|`std::ios_base::in`|`1 << 3`|读
+|`std::ios_base::out`|`1 << 4`|写
+|`std::ios_base::trunc`|`1 << 5`|截断文件
+
+- 只能对支持输入的文件流设置 `in`  
+- 只能对支持输出的文件流设置 `out`  
+- 只能对 `out` 模式的文件流设置 `trunc`  
+- 只能对非 `trunc` 模式的文件流设置 `app`  
 - 若设置了 `app`，则 `out` 也隐式地被设置  
 - 若只设置 `out`，则 `trunc` 也隐式地被设置，若需阻止文件被截断，则需额外添加 `app` 或 `in` 模式  
 - `ate` 和 `binary` 可应用于所有文件流  
@@ -163,18 +335,17 @@ for (size_t i = 0; i < 10; ++i)
 `ofstream`|`out`
 `fstream`|`in\|out`
 
-每次将文件流对象绑定到新文件时都可以重新指定模式  
+每次将文件流对象绑定到新文件时都可以重新指定模式。
 
-## 7. string 流
+## 6. string 流
 
 ### string 流的特有操作
 
 ```C++
-stringstream stream; // 未绑定的默认文件流
-stringstream stream(s); 
-/* 将 string 类型的 s 的拷贝到 stream 中
- * 该构造函数是 explicit 的
- */
+stringstream stream; // 未绑定的默认 string 流
+
+stringstream stream(s); // 使用 string 类型的 s 初始化，explicit
+
 stream.str() // 返回 stream 中保存的字符串拷贝
 stream.str(s) // 无返回值，将 string 类型的 s 拷贝到 stream 中
 ```
@@ -182,26 +353,23 @@ stream.str(s) // 无返回值，将 string 类型的 s 拷贝到 stream 中
 ### istringstream 使用示例
 
 ```C++
-struct PersonInfo
-{
+struct PersonInfo {
     string name;
     vector<string> phones;
 };
+
 string line, phone;
 vector<PersonInfo> people;
 
-/* 从标准输入读取如下格式的数据到 people 中：
- * 每行为：名字 电话号码1 电话号码2 ...
- * 不限行数
- */
-while (getline(cin, line))
-{
-    PersonInfo info;
+ // 从标准输入读取如下格式的数据到 people 中：
+ // 每行为：名字 电话号码1 电话号码2 ...
+while (getline(cin, line)) {
+    people.emplace_back();
+    PersonInfo &info = people.back();
     istringstream record(line);
     record >> info.name;
     while (record >> phone)
         info.phones.push_back(phone);
-    people.push_back(info);
 }
 ```
 
@@ -254,7 +422,7 @@ while (getline(cin, line))
 `hex`：使整型值打印为十六进制格式（没有前面的 0x）  
 `dec`：使整型值打印为十进制格式（默认）  
 `default`：使整型值打印为十进制格式  
-`setbase(b)`：将整型值设置为 b（`int`） 进制格式，仅支持 8，10，16，否则重置  
+`setbase(b)`：将整型值设置为 b（`int`） 进制格式，仅支持 8，10，16，否则重置为十进制  
 
 ### 浮点数的格式
 

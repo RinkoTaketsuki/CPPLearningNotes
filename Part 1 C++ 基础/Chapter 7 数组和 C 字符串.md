@@ -75,9 +75,9 @@ int arr[3][4] = {0, 1, 2, 3} // 显式初始化第一行
 
     ```C++
     int arr[3][4] = {0};
-    for(auto &row : arr)
+    for(auto &row : arr) // int (&)[4]
     {
-        for(auto &item : row)
+        for(auto &item : row) // int&
         {
             /* 处理 item */
         }
@@ -136,6 +136,12 @@ char *strcpy(char *__restrict__ dest, const char *__restrict__ src);
 // strcpy 把src赋给dest，若src长度大于dest会被截断（原/0位也会被填充）,若src
 // 长度小于dest则会用/0替换掉dest[strlen(src)]上的字符，下标超过strlen(src)
 // 部分的字符不变
+char *strncpy(char *__restrict__ dest, const char *__restrict__ src, size_t n);
+// 从 src 拷贝 n 个字符到 dest，若 strlen(src) < n，则剩下的字符用 '\0' 填充
+// 若 strlen(src) >= n，须注意不会额外拷贝一个 '\0'
+char *strcpy_s(char *dest, rsize_t size_in_bytes, const char *src);
+// 从 src 拷贝最多 size_in_bytes 个字符到 dest，且会在后面额外添加一个 '\0'
+// 若 strlen(src) >= size_in_bytes，则不会额外添加 '\0'，但是会把 dest[0] 置为 '\0'
 
 // 不可直接比较两个char*变量，否则会变成指针的比较
 ```
